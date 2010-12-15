@@ -71,16 +71,16 @@ pipe.register(filter, router, function(err, id) {
 		}
 	      });
 
-pipe.on('1w', function(msg) {
-	  console.log('RECEIVED 1w:' + msg.body());	  
+pipe.on('1w', function(id, msg) {
+	  console.log('RECEIVED 1w:' + id + ':' + msg.body());	  
 	  i++;
 	  if(i < max) send1w(i);	  
 	  else
 	    process.exit();
 	});
 
-pipe.on('2w', function(msg) {
-	  console.log('REPLYING 2w:' + msg.body());	  
+pipe.on('2w', function(id, msg) {
+	  console.log('REPLYING 2w:' + id + ':' + msg.body());	  
 	  var reply = fwk.message.reply(msg);
 	  reply.setBody(msg.body());
 	  pipe.send(reply, handler1w);

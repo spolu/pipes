@@ -4,6 +4,7 @@ TODO lib:
 - advanced test unregister with active subs
 
 TODO bin:
+- add timeouts
 - refactor server.js
 - access function over network /acc
 - monitoring / admin tools
