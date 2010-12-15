@@ -1,10 +1,11 @@
 {
   "name": "pipe",
-  "description": "Alaryo Pipe Messaging Library",
+  "description": "Alaryo Pipe Messaging Library and Binary",
   "version": "0.1.0",
   "author": "Stanislas Polu <stan@alaryo.com>",
-  "keywords": ["alaryo", "messaging", "library"],
+  "keywords": ["alaryo", "messaging", "library", "server"],
   "dependencies": {"fwk": ">= 0.1.0" },
   "main" : "./lib/pipe",
-  "engines": { "node": ">= 0.3.0" }
+  "bin" : "./bin/pipe.js",
+  "engines": { "node": ">= 0.3.1" }
 }

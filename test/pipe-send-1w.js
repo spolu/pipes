@@ -1,7 +1,7 @@
 var util = require('util');
 var fwk = require('fwk');
 
-var pipe = require("../pipe/lib/pipe.js").pipe({});
+var pipe = require('pipe').pipe({});
 
 if(process.argv.length < 3) {
   console.log('node pipe-send.js subject [count]');

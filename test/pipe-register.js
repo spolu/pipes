@@ -1,7 +1,7 @@
 var util = require('util');
 var fwk = require('fwk');
 
-var pipe = require("../pipe/lib/pipe.js").pipe({});
+var pipe = require('pipe').pipe({});
 
 var filter = function(msg) {
   return true;

@@ -1,6 +1,15 @@
-TODOs:
+TODO lib:
 - max concurrent connection
 - admin tools
 - advanced test unregister with active subs
 
-CHANGELOG:
+TODO bin:
+- refactor server.js
+- access function over network /acc
+- package (spark?)
+- monitoring / admin tools
+
+
+CHANGELOG lib:
+
+CHANGELOG bin:
