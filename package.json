@@ -3,7 +3,7 @@
   "description": "Alaryo Pipe Messaging Library and Binary",
   "version": "0.1.0",
   "author": "Stanislas Polu <stan@alaryo.com>",
-  "keywords": ["alaryo", "messaging", "library", "server"],
+  "keywords": ["alaryo", "messaging", "library", "binary"],
   "dependencies": {"fwk": ">= 0.1.0" },
   "main" : "./lib/pipe",
   "bin" : "./bin/pipe",

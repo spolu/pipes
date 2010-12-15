@@ -7,8 +7,12 @@ TODO bin:
 - refactor server.js
 - access function over network /acc
 - monitoring / admin tools
+- add monitoring registration (non queuing): error / status
+
 
 CHANGELOG v0.1.1:
 
+- add default registration (non queuing): all
+- rename piped -> pipe
 - merge of piped and pipe
 - packaging with npm of piped as pipe binary

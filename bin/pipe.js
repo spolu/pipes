@@ -5,6 +5,6 @@ var server = require("./server.js");
 var config = require("./config.js");
 
 fwk.populateConfig(config.config);
-server.createPiped(function access(ctx, msg, cont_) {
-		     return cont_(true); 
+server.createPipe(function access(ctx, msg, cont_) {
+		    return cont_(true); 
 		   }).listen(config.config['PIPE_PORT']);

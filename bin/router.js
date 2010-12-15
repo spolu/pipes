@@ -124,7 +124,7 @@ var registration = function(spec, my) {
 	  r.subs[i].forward(msg);
       }
       else
-	q.push(msg);
+	q.push(msg);	
     }
     my.queue = q;
   };
@@ -158,6 +158,16 @@ var router = function(spec, my) {
   
   my.regs = {};
   my.twoways = {};
+  
+  /** all default registration */
+  my.regs['all'] = registration({ ctx: fwk.context({}, {tint: 'all'}),
+				  filter: function(msg) {
+				    return true;
+				  },
+				  router: function(subs) {
+				    /** this prevents queueing */
+				    return {subs: subs, ok: true};
+				  } });
   
   /** Helper function to execute a callback. */
   var callback = function(ctx, cb_, msg) {

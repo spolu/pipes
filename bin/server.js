@@ -256,11 +256,11 @@ RouteHandler.prototype.subscribe = function(ctx, query) {
 
 
 /**
- * Piped object
+ * Pipe Server object
  */
 
-function Piped(access) {
-  if(!(this instanceof Piped)) return new Piped(access);
+function Pipe(access) {
+  if(!(this instanceof Pipe)) return new Pipe(access);
   http.Server.call(this);    
   
   this.logger = fwk.logger();  
@@ -276,10 +276,10 @@ function Piped(access) {
 		     this.handler.process(ctx);
 		   }.bind(this));
 }
-util.inherits(Piped, http.Server);
+util.inherits(Pipe, http.Server);
 
-exports.Piped = Piped;
+exports.Pipe = Pipe;
 
-exports.createPiped = function(access) {
-  return new Piped(access);
+exports.createPipe = function(access) {
+  return new Pipe(access);
 };
