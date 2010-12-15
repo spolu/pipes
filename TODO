@@ -6,10 +6,9 @@ TODO lib:
 TODO bin:
 - refactor server.js
 - access function over network /acc
-- package (spark?)
 - monitoring / admin tools
 
+CHANGELOG v0.1.1:
 
-CHANGELOG lib:
-
-CHANGELOG bin:
+- merge of piped and pipe
+- packaging with npm of piped as pipe binary
