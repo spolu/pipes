@@ -5,8 +5,9 @@ TODO lib:
 
 TODO bin:
 - add timeouts
+- if msg contains n targets: split in n msg before routing
 - refactor server.js
-- access function over network /acc
+- access control function over network /acc 
 - monitoring / admin tools
 - add monitoring registration (non queuing): error / status
 

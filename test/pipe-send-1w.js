@@ -16,7 +16,9 @@ for(var i = 0; i < count; i ++) {
   var msg = fwk.message({});
   msg.setType('1w')
     .setSubject(subject)
-    .setBody(i);  
+    .setBody(i)
+    .addTarget('tt1')
+    .addTarget('tt2');  
   pipe.send(msg, function(err, hdr, res) {
 	      if(err)
 		console.log(err.stack);
