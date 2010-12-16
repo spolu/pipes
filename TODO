@@ -4,7 +4,7 @@ TODO lib:
 - advanced test unregister with active subs
 
 TODO bin:
-- add timeouts
+- add timeouts (maybe not? timeout = loss for all registration. maybe remove actual connection timeout)
 - if msg contains n targets: split in n msg before routing
 - refactor server.js
 - access control function over network /acc 
