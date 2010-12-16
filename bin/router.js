@@ -222,12 +222,12 @@ var router = function(spec, my) {
 	ctx.error(new Error('No matching registration'));
 	return;      
       }
-      ctx.log.out('1w ' + msg.subject());
+      ctx.log.out('1w ' + msg.toString());
       ack(ctx, msg, cb_);
     }   
     /** twoways handling */
     else if(msg.type() === '2w') {
-      ctx.log.out('2w ' + msg.subject());
+      ctx.log.out('2w ' + msg.toString());
       my.twoways[msg.tint()] = {'msg': msg, 
 				'cb_': cb_,
 				'ctx': ctx};
@@ -246,7 +246,7 @@ var router = function(spec, my) {
     else if(msg.type() === 'r') {
       var m = my.twoways[msg.tint()];
       if(m) {
-	ctx.log.out('r');
+	ctx.log.out('r ' + msg.toString());
 	/** we reply the original 2w message (registration should be removed */
 	callback(m.ctx, m.cb_, msg);
 	ack(ctx, msg, cb_);

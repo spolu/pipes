@@ -13,6 +13,7 @@ TODO bin:
 
 CHANGELOG v0.1.1:
 
+- pipe error ar no longer termination conditions
 - add default registration (non queuing): all
 - rename piped -> pipe
 - merge of piped and pipe
