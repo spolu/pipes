@@ -4,7 +4,7 @@ TODO lib:
 - advanced test unregister with active subs
 
 TODO bin:
-- add timeouts (maybe not? timeout = loss for all registration. maybe remove actual connection timeout)
+- add timeout for message
 - if msg contains n targets: split in n msg before routing
 - refactor server.js
 - access control function over network /acc 
@@ -14,6 +14,7 @@ TODO bin:
 
 CHANGELOG v0.1.1:
 
+- removed timeout for subscription
 - pipe error ar no longer termination conditions
 - add default registration (non queuing): all
 - rename piped -> pipe

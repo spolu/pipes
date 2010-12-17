@@ -264,7 +264,7 @@ var router = function(spec, my) {
 	var s = my.regs[id].subs().pop();
 	s.ctx().error(new Error('Registration with id: ' + id + ' was removed'));
       }
-      ctx.log.out('Removed registration for ' + id);    
+      ctx.log.out('unregister: ' + id);    
       delete my.regs[id];
     }
   };
@@ -277,7 +277,7 @@ var router = function(spec, my) {
     if(my.regs.hasOwnProperty(id))
       unregister(ctx, id);    
   
-    ctx.log.out('Added registration for ' + id);
+    ctx.log.out('register: ' + id);
     my.regs[id] = r;
   
     return id;
@@ -290,11 +290,11 @@ var router = function(spec, my) {
       return;
     }
     var s = subscription({ctx: ctx, tag: tag, cb_: cb_});
-    ctx.log.out('Subscription added from Registration ' + id);
+    ctx.log.out('added: ' + id);
     my.regs[id].subs().push(s);
     
     ctx.on('finalize', function(ctx) {
-	     ctx.log.out('Subscription removed to registration ' + id);
+	     ctx.log.out('removed: ' + id);
 	     my.regs[id].subs().remove(s);
 	   });  
 

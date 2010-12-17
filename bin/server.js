@@ -237,6 +237,7 @@ RouteHandler.prototype.subscribe = function(ctx, query) {
       var id = query.id;
       var tag = query.tag;      
       var first = true;
+      ctx.request().connection.setTimeout(0);
       this.router.subscribe(ctx, id, tag, function(msg) {		
 			      if(first) {
 				ctx.response().writeHead(200, {'Content-Type': 'text/plain;'});

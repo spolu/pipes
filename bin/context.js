@@ -58,6 +58,7 @@ var context = function(spec, my) {
     my.request.connection.on('end', finalize);
     my.request.connection.on('close', finalize);
     my.request.connection.on('error', finalize);    
+    my.request.connection.on('timeout', function() { that.log.debug('TIMEOUT event'); });
   }
     
   var authenticate = function(key, alg) {    
