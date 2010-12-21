@@ -1,10 +1,290 @@
+var http = require('http');
+var url = require('url');
 var util = require('util');
 var fwk = require('fwk');
 
-var server = require("./server.js");
-var config = require("./config.js");
+var cfg = require("./config.js");
+var context = require("./context.js");
 
-fwk.populateConfig(config.config);
-server.createPipe(function access(ctx, msg, cont_) {
-		    return cont_(true); 
-		   }).listen(config.config['PIPE_PORT']);
+/** 
+ * The Pipe Server Object
+ * 
+ * @extends {}
+ * 
+ * @param spec {port}
+ */ 
+var pipe = function(spec, my) {
+  my = my || {};
+  var _super = {};
+
+  fwk.populateConfig(cfg.config);
+  my.cfg = cfg.config;
+  my.logger = fwk.logger();
+  
+  my.port = spec.port || my.cfg['PIPE_PORT'];
+  
+  my.server = http.createServer();
+
+  my.router = require("./router.js").router({ config: my.cfg });
+  my.access = require("./access.js").access({ config: my.cfg });
+  
+  var that = {};
+  
+  var handler, error, unauthorized, notfound;
+  var message, subscribe, register, unregister, grant, revoke, list;
+  
+  handler = function(req, res) {
+    var ctx = context.context({ request: req,
+				response: res,
+				logger: my.logger,
+				config: my.cfg });
+    ctx.request().setEncoding('utf8');
+    urlreq = url.parse(ctx.request().url, true);
+    ctx.push('cmd:' + urlreq.pathname.substring(1));
+    
+    /** authentication */
+    ctx.authenticate(my.cfg['PIPE_HMAC_KEY']);
+    if(ctx.auth().authenticated)
+      ctx.push('user:' + ctx.auth().username);
+    else
+      ctx.push('user:none');
+    
+    var auth = ctx.auth().authenticated;
+    var user = ctx.auth().username;
+    
+    /** error handling */
+    ctx.on('error', function(err, ctx) {
+	     error(ctx, 500, err.message);
+	   });
+    
+    switch(urlreq.pathname) {
+      
+      /** PUBLIC FUNCTIONS */    
+      
+      /** message 1-way/2-way */
+    case '/msg':    
+      message(ctx, urlreq.query);
+      break;    
+      
+      /** ADMIN FUNCTIONS */
+      
+    /** subscription */
+    case '/sub':
+      if(user === my.cfg['PIPE_ADMIN_USER'] && auth)
+	subscribe(ctx, urlreq.query);
+      else unauthorized(ctx);
+      break;
+      
+      /** registration */
+    case '/reg':
+      if(user === my.cfg['PIPE_ADMIN_USER'] && auth)
+	register(ctx, urlreq.query);
+      else unauthorized(ctx);
+      break;
+    case '/unr':
+      if(user === my.cfg['PIPE_ADMIN_USER'] && auth)
+	unregister(ctx, urlreq.query);
+      else unauthorized(ctx);
+      break;
+      
+      /** grant */
+    case '/grt':
+      if(user === my.cfg['PIPE_ADMIN_USER'] && auth)
+	grant(ctx, urlreq.query);
+      else unauthorized(ctx);
+      break;
+    case '/rvk':
+      if(user === my.cfg['PIPE_ADMIN_USER'] && auth)
+	revoke(ctx, urlreq.query);
+      else unauthorized(ctx);
+      break;
+      
+      /** list */
+    case '/lst':
+      if(user === my.cfg['PIPE_ADMIN_USER'] && auth)
+	list(ctx, urlreq.query);
+      else unauthorized(ctx);
+      break;
+            
+    default:
+      notfound(ctx);
+    }    
+  };
+
+  error = function(ctx, code, reason) {
+    var data = code + ' {' + ctx.tint() + '} [' + reason + ']: '  + unescape(ctx.request().url);
+    ctx.response().writeHead(code, {'Content-Length': data.length,
+				    'Content-Type': "text/html;"});
+    ctx.response().write(data);
+    ctx.response().end();  
+    ctx.finalize();
+  };
+  
+  notfound = function(ctx) {
+    error(ctx, 404, 'Not Found');    
+  };
+  
+  unauthorized = function(ctx) {
+    error(ctx, 403, 'Forbidden');
+  };
+
+  
+  message = function(ctx, query) {
+    var msg;
+    
+    ctx.request().on("data", function(chunk) { ctx.multi().recv(chunk); });
+    ctx.request().on("end", function() { ctx.multi().end(); });
+    
+    ctx.multi().on(
+      'recv', 
+      function(type, body) {
+	if(type === 'msg') {
+	  try {
+	    msg = fwk.message.deserialize(body);
+	    /** cookie forwarding */
+	    msg.setCookies(ctx.cookies());
+	    /** tint forwarding */
+	    if(msg.tint())
+	      ctx.setTint(msg.tint());
+	    else
+	      msg.setTint(ctx.tint());		       
+	  } catch (err) { ctx.error(err); }		     
+	}
+      });
+    
+    ctx.multi().on(
+      'end', 
+      function() {
+	if(msg) {
+	  try {
+	    if(my.access.isgranted(ctx, msg)) {
+	      my.router.route(
+		ctx, msg, 
+		function(reply) {
+		  var body = JSON.stringify(reply.body());
+		  var headers = reply.headers();
+		  headers['Content-Type'] = "text/plain;";
+		  ctx.response().writeHead(200, headers);
+		  ctx.multi().on('chunk', function(chunk) { ctx.response().write(chunk); });
+		  ctx.multi().send('body', body);
+		  ctx.response().end();
+		  ctx.finalize();	 
+		});
+	      /** TODO add timeout */
+	    }
+	    else
+	      unauthorized(ctx);
+	  } catch (err) { ctx.error(err, true); }
+	} 
+	else 
+	  ctx.error(new Error('No msg specified'));
+      });
+
+  };
+  
+
+  subscribe = function(ctx, query) {
+    try {
+      if(query && 
+	 query.id && query.tag) {
+	var id = query.id;
+	var tag = query.tag;      
+	var first = true;
+	ctx.request().connection.setTimeout(0);
+	my.router.subscribe(
+	  ctx, id, tag, 
+	  function(msg) {		
+	    if(first) {
+	      ctx.response().writeHead(200, {'Content-Type': 'text/plain;'});
+	      ctx.multi().on('chunk', function(chunk) { ctx.response().write(chunk); });
+	      first = false;
+	    }
+	    ctx.multi().send('msg', msg.serialize());
+	  });      
+	/** TODO add timeout */
+      } else
+	ctx.error(new Error('No id specified'));    
+    } catch (err) { ctx.error(err, true); }
+  };
+
+  
+  register = function(ctx, query) {
+    var filter, router;  
+  
+    ctx.request().on("data", function(chunk) { ctx.multi().recv(chunk); });
+    ctx.request().on("end", function() { ctx.multi().end(); });
+    
+    ctx.multi().on(
+      'recv', function(type, body) {
+	if(type === 'filter')
+	  filter = body;
+	if(type === 'router')
+	  router = body;
+      });
+    
+    ctx.multi().on(
+      'end', 
+      function() {
+	try {
+	  if(filter && router) {
+	    eval("var filterfun = " + filter);
+	    eval("var routerfun = " + router);
+	    
+	    if(typeof filterfun === 'function' &&
+	       typeof routerfun === 'function') {
+	      var id = my.router.register(ctx, filterfun, routerfun);
+	      
+	      ctx.response().writeHead(200, {'Content-Type': 'text/plain;'});
+	      ctx.multi().on('chunk', function(chunk) { ctx.response().write(chunk); });
+	      ctx.multi().send('id', id);
+	      ctx.response().end();
+	      ctx.finalize();	 
+	    }		     
+	  }
+	  else
+	    ctx.error(new Error('Filter or router not a function'));		   		     
+	} catch (err) { ctx.error(err, true); }
+      });  
+  };
+  
+
+  unregister = function(ctx, query) {
+    try {
+      if(query && query.id) {
+	var id = query.id;
+	my.router.unregister(ctx, id);
+	
+	ctx.response().writeHead(200, {'Content-Type': 'text/plain;'});
+	ctx.multi().on('chunk', function(chunk) { ctx.response().write(chunk); });
+	ctx.multi().send('done');
+	ctx.response().end();
+	ctx.finalize();	 
+      } 
+      else
+	ctx.error(new Error('No id specified'));  
+    } catch (err) { ctx.error(err, true); }          
+  };
+  
+
+  grant = function(ctx, query) {
+  
+  };
+  
+  revoke = function(ctx, query) {
+  
+  };
+  
+  list = function(ctx, query) {
+  
+  };
+  
+
+  my.server.on('request', handler);
+  
+  my.server.listen(my.port);
+
+  return that;  
+};
+
+/** main */
+pipe({});

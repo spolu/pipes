@@ -1,7 +1,7 @@
 var fwk = require('fwk');
 var util = require('util');
 
-var config = require("./config.js");
+var cfg = require("./config.js");
 
 /**
  * A Subscription
@@ -148,7 +148,9 @@ var registration = function(spec, my) {
  * The Router is in charge of routing the message to the correct subscriber 
  * given the current registrations available.
  * 
- * @param spec {}
+ * @extends {}
+ * 
+ * @param spec {config}
  */
 var router = function(spec, my) {
   my = my || {};
@@ -158,6 +160,8 @@ var router = function(spec, my) {
   
   my.regs = {};
   my.twoways = {};
+  
+  my.cfg = spec.config || cfg.config;
   
   /** all default registration */
   my.regs['all'] = registration({ ctx: fwk.context({}, {tint: 'all'}),
@@ -203,11 +207,10 @@ var router = function(spec, my) {
   var ack = function(ctx, msg, cb_) {
     var ackmsg = fwk.message.ack(msg);
     ackmsg.setHeader('Set-Cookie', fwk.generateAuthSetCookie(
-		       {config: config.config,
-			key: config.config['PIPE_HMAC_KEY'],
-			user: 'admin',
-			expiry: new Date("December 31, 2010 11:13:00")
-		       }));
+		       { config: my.cfg,
+			 key: my.cfg['PIPE_HMAC_KEY'],
+			 user: 'admin',
+			 expiry: new Date("December 31, 2010 11:13:00") }));
     callback(ctx, cb_, ackmsg);
   };
   

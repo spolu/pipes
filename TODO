@@ -5,15 +5,16 @@ TODO lib:
 
 TODO bin:
 - add timeout for message
-- if msg contains n targets: split in n msg before routing
-- refactor server.js
-- access control function over network /acc 
-- monitoring / admin tools
+- add index with basic information
+- access control function over network /grt 
+- monitoring tools
+- admin tools
 - add monitoring registration (non queuing): error / status
 
 
 CHANGELOG v0.1.1:
 
+- refactor server.js into bin/pipe.js
 - removed timeout for subscription
 - pipe error ar no longer termination conditions
 - add default registration (non queuing): all
