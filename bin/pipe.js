@@ -362,27 +362,36 @@ var pipe = function(spec, my) {
     
     ctx.multi().on(
       'recv', function(type, data) {
-	if(type === 'id')
-	  id = data;
 	if(type === 'kind')
 	  kind = data;
+	if(type === 'id')
+	  id = data;
       });
     
     ctx.multi().on(
       'end', 
       function() {
 	try {
-	  if(id) {
-	    my.access.revoke(ctx, id);
-	    
+	  if(kind) {
+	    var data;	    
+	    switch(kind) {
+	    case 'reg':
+	      data = my.router.list(id);
+	      break;
+	    case 'auth':
+	      data = my.access.list(id);
+	      break;
+	    }	    
+
+	    var body = JSON.stringify(data);
 	    ctx.response().writeHead(200, {'Content-Type': 'text/plain;'});
 	    ctx.multi().on('chunk', function(chunk) { ctx.response().write(chunk); });
-	    ctx.multi().send('done');
+	    ctx.multi().send('data', body);
 	    ctx.response().end();
-	    ctx.finalize();	 
+	    ctx.finalize();	 	      
 	  }
 	  else
-	    ctx.error(new Error('revoke: no id specified'));		   		     
+	    ctx.error(new Error('list: no kind specified'));		   		     
 	} catch (err) { ctx.error(err, true); }
       });  
     

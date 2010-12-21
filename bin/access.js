@@ -30,19 +30,27 @@ var authorization = function(spec, my) {
 	return false;
       }
     };    
+    my.filterdata = spec.filter.toString();
   }
   else    
     my.filter = function() { return false; };
   
   var that = {};
   
-  var filter;  
+  var filter, describe;  
   
   filter = function(user, msg) {
     return my.filter(user, msg);
   };
   
+  describe = function() {
+    return { id: my.id,
+	     tag: my.tag,
+	     filter: my.filterdata };
+  };
+  
   that.method('filter', filter);
+  that.method('describe', describe);
 
   that.getter('id', my, 'id');
   that.getter('tag', my, 'tag');
@@ -68,7 +76,7 @@ var access = function(spec, my) {
 
   var that = {};
   
-  var grant, revoke, isgranted;
+  var grant, revoke, isgranted, list;
   
   grant = function(ctx, tag, filter) {
     var a = authorization({ ctx: ctx,
@@ -112,8 +120,20 @@ var access = function(spec, my) {
     return false;
   };
   
+  
+  list = function(id) {
+    var data = {};
+    for(var i in my.auths) {
+      if(my.auths.hasOwnProperty(i) && (!id || id === i))
+	data[i] = my.auths[i].describe();
+    }
+    return data;
+  };
+
+
   that.method('grant', grant);
   that.method('revoke', revoke);
+  that.method('list', list);
 
   that.method('isgranted', isgranted);
 

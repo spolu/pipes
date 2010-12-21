@@ -11,16 +11,16 @@ var cfg = require("./config.js");
 var subscription = function(spec, my) {
   my = my || {};
   var _super = {};
-  
-  var that = {};
-
-  var forward;
-  
+    
   my.ctx = spec.ctx;
   if(spec.ctx && spec.ctx.responds('tint'))
     my.id = spec.ctx.tint();
   my.tag = spec.tag;
   my.cb_ = spec.cb_;  
+
+  var that = {};
+
+  var forward, describe;
   
   forward = function(msg) {
     try{
@@ -29,12 +29,18 @@ var subscription = function(spec, my) {
       my.ctx.error(err, true);
     }    
   };
+  
+  describe = function() {
+    return { id: my.id,
+	     tag: my.tag };
+  };
 
   that.getter('ctx', my, 'ctx');
   that.getter('id', my, 'id');  
   that.getter('tag', my, 'tag');  
   
   that.method('forward', forward);
+  that.method('describe', describe);
 
   return that;
 };
@@ -75,6 +81,7 @@ var registration = function(spec, my) {
 	return false;
       }
     };    
+    my.filterdata = spec.filter.toString();
   }
   else    
     my.filter = function() { return false; };
@@ -94,13 +101,14 @@ var registration = function(spec, my) {
 	return [];
       }
     };    
+    my.routerdata = spec.router.toString();
   }
   else    
     my.router = function() { return []; };
     
   var that = {};
   
-  var filter, router, queue, pump, tag;  
+  var filter, router, queue, pump, tag, describe;  
 
   filter = function(msg) {
     return my.filter(msg);
@@ -129,10 +137,24 @@ var registration = function(spec, my) {
     my.queue = q;
   };
   
+  describe = function() {
+    var data = { id: my.id,
+		 tag: my.tag,
+		 filter: my.filterdata,
+		 router: my.routerdata,
+		 size: my.queue.length };
+    data.subs = [];
+    my.subs.forEach(function(sub) {
+		      data.subs.push(sub.describe());
+		    });	     
+    return data;
+  };
+
   that.method('filter', filter);
   that.method('router', router);
   that.method('queue', queue);
   that.method('pump', pump);
+  that.method('describe', describe);
 
   that.getter('id', my, 'id');
   that.getter('tag', my, 'tag');
@@ -156,9 +178,7 @@ var registration = function(spec, my) {
 var router = function(spec, my) {
   my = my || {};
   var _super = {};
-  
-  var that = {};
-  
+    
   my.regs = {};
   my.twoways = {};
   
@@ -174,8 +194,13 @@ var router = function(spec, my) {
 				    return {subs: subs, ok: true};
 				  } });
   
+  var that = {};
+
+  var callback, forward, ack, route, 
+      register, unregister, subscribe, list, reg;
+
   /** Helper function to execute a callback. */
-  var callback = function(ctx, cb_, msg) {
+  callback = function(ctx, cb_, msg) {
     try{
       cb_(msg);
     } catch (err) {
@@ -184,7 +209,7 @@ var router = function(spec, my) {
   };
 
   /** Helper function to forward a 1w or 2w message to the registrations */
-  var forward = function(msg) {
+  forward = function(msg) {
     var done = false;
     for(var id in my.regs) {      
       if(my.regs.hasOwnProperty(id)) {
@@ -205,7 +230,7 @@ var router = function(spec, my) {
   };
 
   /** Helper function to ack a '1w' or 'r' message */
-  var ack = function(ctx, msg, cb_) {
+  ack = function(ctx, msg, cb_) {
     var ackmsg = fwk.message.ack(msg);
     ackmsg.setHeader('Set-Cookie', fwk.generateAuthSetCookie(
 		       { config: my.cfg,
@@ -219,7 +244,7 @@ var router = function(spec, my) {
    * Route a msg to matching subs
    * cb_(msg) is called once the message is accepted (1w, r) or replied (2w) 
    */
-  var route = function(ctx, msg, cb_) {
+  route = function(ctx, msg, cb_) {
     /** oneways handling */
     if(msg.type() === '1w') {
       if(!forward(msg)) {
@@ -262,7 +287,7 @@ var router = function(spec, my) {
   };
 
   /** Unregister a filter. Any sub is returned with a specific error */
-  var unregister = function(ctx, id) {
+  unregister = function(ctx, id) {
     if(my.regs.hasOwnProperty(id)) {
       while(my.regs[id].subs().length > 0) {	
 	var s = my.regs[id].subs().pop();
@@ -274,7 +299,7 @@ var router = function(spec, my) {
   };
   
   /** Register a filter to the router and return the associated id */
-  var register = function(ctx, tag, filter, router) {
+  register = function(ctx, tag, filter, router) {
     var r = registration({ ctx: ctx, 
 			   tag: tag, 
 			   filter: filter, 
@@ -291,7 +316,7 @@ var router = function(spec, my) {
   };
 
   /** Subscribe a context for a given subscription id */
-  var subscribe = function(ctx, id, tag, cb_) {    
+  subscribe = function(ctx, id, tag, cb_) {    
     if(!my.regs[id]) {
       ctx.error(new Error('No registration for id: ' + id));
       return;
@@ -308,14 +333,26 @@ var router = function(spec, my) {
     my.regs[id].pump();
   };
 
-  var reg = function(id) {
+  list = function(id) {
+    var data = {};
+    for(var i in my.regs) {
+      if(my.regs.hasOwnProperty(i) && (!id || id === i))
+	data[i] = my.regs[i].describe();
+    }
+    return data;
+  };
+  
+
+  reg = function(id) {
     return my.regs[id];
   };
+
   
   that.method('route', route);
   that.method('register', register);  
   that.method('unregister', unregister);  
   that.method('subscribe', subscribe);  
+  that.method('list', list);
   
   that.method('reg', reg);
   that.getter('regs', my, 'regs');
