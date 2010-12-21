@@ -58,10 +58,10 @@ handler1w = function(err, hdrs, res) {
   }
 };
 
-pipe.register(filter, router, function(err, id) {
+pipe.register('pipe-stress-test', filter, router, function(err, id) {
 		rid = id;
 		if(err)
-		  console.log(err.stack);
+		  console.log(err.message);
 		else {
 		  console.log('id: ' + id);	  
 		  pipe.subscribe(id, 'test');

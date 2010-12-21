@@ -5,8 +5,7 @@ TODO lib:
 
 TODO bin:
 - add timeout for message
-- add index with basic information
-- access control function over network /grt 
+- add index serving with basic information
 - monitoring tools
 - admin tools
 - add monitoring registration (non queuing): error / status
@@ -14,6 +13,7 @@ TODO bin:
 
 CHANGELOG v0.1.1:
 
+- access control function over network /grt 
 - refactor server.js into bin/pipe.js
 - removed timeout for subscription
 - pipe error ar no longer termination conditions

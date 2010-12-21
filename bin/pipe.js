@@ -45,12 +45,12 @@ var pipe = function(spec, my) {
     /** authentication */
     ctx.authenticate(my.cfg['PIPE_HMAC_KEY']);
     if(ctx.auth().authenticated)
-      ctx.push('user:' + ctx.auth().username);
+      ctx.push('user:' + ctx.auth().user);
     else
       ctx.push('user:none');
     
     var auth = ctx.auth().authenticated;
-    var user = ctx.auth().username;
+    var user = ctx.auth().user;
     
     /** error handling */
     ctx.on('error', function(err, ctx) {
@@ -203,23 +203,25 @@ var pipe = function(spec, my) {
 	  });      
 	/** TODO add timeout */
       } else
-	ctx.error(new Error('No id specified'));    
+	ctx.error(new Error('subscribe: no id specified'));    
     } catch (err) { ctx.error(err, true); }
   };
 
   
   register = function(ctx, query) {
-    var filter, router;  
+    var tag, filter, router;  
   
     ctx.request().on("data", function(chunk) { ctx.multi().recv(chunk); });
     ctx.request().on("end", function() { ctx.multi().end(); });
     
     ctx.multi().on(
-      'recv', function(type, body) {
+      'recv', function(type, data) {
+	if(type === 'tag')
+	  tag = data;
 	if(type === 'filter')
-	  filter = body;
+	  filter = data;
 	if(type === 'router')
-	  router = body;
+	  router = data;
       });
     
     ctx.multi().on(
@@ -228,11 +230,10 @@ var pipe = function(spec, my) {
 	try {
 	  if(filter && router) {
 	    eval("var filterfun = " + filter);
-	    eval("var routerfun = " + router);
-	    
+	    eval("var routerfun = " + router);	    
 	    if(typeof filterfun === 'function' &&
 	       typeof routerfun === 'function') {
-	      var id = my.router.register(ctx, filterfun, routerfun);
+	      var id = my.router.register(ctx, tag, filterfun, routerfun);
 	      
 	      ctx.response().writeHead(200, {'Content-Type': 'text/plain;'});
 	      ctx.multi().on('chunk', function(chunk) { ctx.response().write(chunk); });
@@ -240,42 +241,151 @@ var pipe = function(spec, my) {
 	      ctx.response().end();
 	      ctx.finalize();	 
 	    }		     
+	    else
+	      ctx.error(new Error('register: filter or router not a function'));		   		     
 	  }
 	  else
-	    ctx.error(new Error('Filter or router not a function'));		   		     
+	    ctx.error(new Error('register: filter or router unspecified'));		   		     
 	} catch (err) { ctx.error(err, true); }
       });  
   };
   
 
   unregister = function(ctx, query) {
-    try {
-      if(query && query.id) {
-	var id = query.id;
-	my.router.unregister(ctx, id);
-	
-	ctx.response().writeHead(200, {'Content-Type': 'text/plain;'});
-	ctx.multi().on('chunk', function(chunk) { ctx.response().write(chunk); });
-	ctx.multi().send('done');
-	ctx.response().end();
-	ctx.finalize();	 
-      } 
-      else
-	ctx.error(new Error('No id specified'));  
-    } catch (err) { ctx.error(err, true); }          
+    var id;
+
+    ctx.request().on("data", function(chunk) { ctx.multi().recv(chunk); });
+    ctx.request().on("end", function() { ctx.multi().end(); });
+    
+    ctx.multi().on(
+      'recv', function(type, data) {
+	if(type === 'id')
+	  id = data;
+      });
+    
+    ctx.multi().on(
+      'end', 
+      function() {
+	try {
+	  if(id) {
+	    my.router.unregister(ctx, id);
+	    
+	    ctx.response().writeHead(200, {'Content-Type': 'text/plain;'});
+	    ctx.multi().on('chunk', function(chunk) { ctx.response().write(chunk); });
+	    ctx.multi().send('done');
+	    ctx.response().end();
+	    ctx.finalize();	 
+	  }
+	  else
+	    ctx.error(new Error('unregister: no id specified'));		   		     
+	} catch (err) { ctx.error(err, true); }
+      });  
   };
   
 
   grant = function(ctx, query) {
+    var tag, filter;  
   
+    ctx.request().on("data", function(chunk) { ctx.multi().recv(chunk); });
+    ctx.request().on("end", function() { ctx.multi().end(); });
+    
+    ctx.multi().on(
+      'recv', function(type, data) {
+	if(type === 'tag')
+	  tag = data;
+	if(type === 'filter')
+	  filter = data;
+      });
+    
+    ctx.multi().on(
+      'end', 
+      function() {
+	try {
+	  if(filter) {
+	    eval("var filterfun = " + filter);	    
+	    if(typeof filterfun === 'function') {
+	      var id = my.access.grant(ctx, tag, filterfun);
+	      
+	      ctx.response().writeHead(200, {'Content-Type': 'text/plain;'});
+	      ctx.multi().on('chunk', function(chunk) { ctx.response().write(chunk); });
+	      ctx.multi().send('id', id);
+	      ctx.response().end();
+	      ctx.finalize();	 
+	    }		     
+	    else
+	      ctx.error(new Error('grant: filter not a function'));		   		     
+	  }
+	  else
+	    ctx.error(new Error('grant: filter or router unspecified'));		   		     
+	} catch (err) { ctx.error(err, true); }
+      });      
   };
+
   
   revoke = function(ctx, query) {
-  
+    var id;
+
+    ctx.request().on("data", function(chunk) { ctx.multi().recv(chunk); });
+    ctx.request().on("end", function() { ctx.multi().end(); });
+    
+    ctx.multi().on(
+      'recv', function(type, data) {
+	if(type === 'id')
+	  id = data;
+      });
+    
+    ctx.multi().on(
+      'end', 
+      function() {
+	try {
+	  if(id) {
+	    my.access.revoke(ctx, id);
+	    
+	    ctx.response().writeHead(200, {'Content-Type': 'text/plain;'});
+	    ctx.multi().on('chunk', function(chunk) { ctx.response().write(chunk); });
+	    ctx.multi().send('done');
+	    ctx.response().end();
+	    ctx.finalize();	 
+	  }
+	  else
+	    ctx.error(new Error('revoke: no id specified'));		   		     
+	} catch (err) { ctx.error(err, true); }
+      });    
   };
   
+
   list = function(ctx, query) {
-  
+    var kind, id;
+
+    ctx.request().on("data", function(chunk) { ctx.multi().recv(chunk); });
+    ctx.request().on("end", function() { ctx.multi().end(); });
+    
+    ctx.multi().on(
+      'recv', function(type, data) {
+	if(type === 'id')
+	  id = data;
+	if(type === 'kind')
+	  kind = data;
+      });
+    
+    ctx.multi().on(
+      'end', 
+      function() {
+	try {
+	  if(id) {
+	    my.access.revoke(ctx, id);
+	    
+	    ctx.response().writeHead(200, {'Content-Type': 'text/plain;'});
+	    ctx.multi().on('chunk', function(chunk) { ctx.response().write(chunk); });
+	    ctx.multi().send('done');
+	    ctx.response().end();
+	    ctx.finalize();	 
+	  }
+	  else
+	    ctx.error(new Error('revoke: no id specified'));		   		     
+	} catch (err) { ctx.error(err, true); }
+      });  
+    
   };
   
 

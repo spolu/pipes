@@ -52,20 +52,18 @@ var subscription = function(spec, my) {
  * A Registration is given a unique id (based on the ctx tint) to 
  * return to the consummer for later association to a 'sub' request.
  * 
- * @param spec {ctx, filter, router} the context initiating that registration
+ * @param spec {ctx, tag, filter, router} the context initiating that registration
  */
 var registration = function(spec, my) {
   my = my || {};
   var _super = {};   
 
-  var that = {};
-  
-  var filter, router, queue, pump;  
-
   my.ctx = spec.ctx;
-  if(spec.ctx && spec.ctx.responds('tint'))
-    my.id = spec.ctx.tint();
-  my.queue = [];  
+  if(my.ctx && my.ctx.responds('tint'))
+    my.id = my.ctx.tint();
+  my.queue = [];    
+  my.tag = spec.tag;
+  my.subs = [];
 
   if(spec.filter && typeof spec.filter === 'function') {
     my.filter = function(m) { 
@@ -99,9 +97,11 @@ var registration = function(spec, my) {
   }
   else    
     my.router = function() { return []; };
-
-  my.subs = [];
     
+  var that = {};
+  
+  var filter, router, queue, pump, tag;  
+
   filter = function(msg) {
     return my.filter(msg);
   };
@@ -128,13 +128,14 @@ var registration = function(spec, my) {
     }
     my.queue = q;
   };
-
+  
   that.method('filter', filter);
   that.method('router', router);
   that.method('queue', queue);
   that.method('pump', pump);
 
   that.getter('id', my, 'id');
+  that.getter('tag', my, 'tag');
   that.getter('subs', my, 'subs');  
 
   return that;
@@ -273,14 +274,17 @@ var router = function(spec, my) {
   };
   
   /** Register a filter to the router and return the associated id */
-  var register = function(ctx, filter, router) {
-    var r = registration({ctx: ctx, filter: filter, router: router});
+  var register = function(ctx, tag, filter, router) {
+    var r = registration({ ctx: ctx, 
+			   tag: tag, 
+			   filter: filter, 
+			   router: router });
     var id = r.id();
     
     if(my.regs.hasOwnProperty(id))
       unregister(ctx, id);    
   
-    ctx.log.out('register: ' + id);
+    ctx.log.out('register: ' + tag + ' ' + id );
     my.regs[id] = r;
   
     return id;
@@ -293,11 +297,11 @@ var router = function(spec, my) {
       return;
     }
     var s = subscription({ctx: ctx, tag: tag, cb_: cb_});
-    ctx.log.out('added: ' + id);
+    ctx.log.out('added: ' + tag + ' ' + id);
     my.regs[id].subs().push(s);
     
     ctx.on('finalize', function(ctx) {
-	     ctx.log.out('removed: ' + id);
+	     ctx.log.out('removed: ' + tag + ' ' + id);
 	     my.regs[id].subs().remove(s);
 	   });  
 
@@ -308,13 +312,13 @@ var router = function(spec, my) {
     return my.regs[id];
   };
   
-
   that.method('route', route);
   that.method('register', register);  
   that.method('unregister', unregister);  
   that.method('subscribe', subscribe);  
   
   that.method('reg', reg);
+  that.getter('regs', my, 'regs');
 
   return that;
 };

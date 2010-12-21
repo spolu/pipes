@@ -3,17 +3,12 @@ var fwk = require('fwk');
 
 var pipe = require('pipe').pipe({});
 
-var filter = function(msg) {
+var filter = function(user, msg) {
+  util.debug('user granted: ' + user);
   return true;
 };
 
-var router = function(subs) {
-  if(subs.length > 0)
-    return {subs: subs, ok: true};
-  return {ok: false};
-};
-
-pipe.register('pipe-register', filter, router, function(err, id) {
+pipe.grant('pipe-grant-all', filter, function(err, id) {
 		if(err) {
 		  console.log(err.stack);
 		  process.exit();		  
@@ -21,5 +16,6 @@ pipe.register('pipe-register', filter, router, function(err, id) {
 		else {
 		  console.log(id);	  
 		  process.exit();
-		}
-	      });
+		}	     
+	   });
+
