@@ -170,7 +170,13 @@ var pipe = function(spec, my) {
 		  ctx.response().end();
 		  ctx.finalize();	 
 		});
-	      /** TODO add timeout */
+	      /** timeout 2w */
+	      if(msg.type() === '2w') {
+		setTimeout(function() {
+			     if(!ctx.finalized())
+			       ctx.error(new Error('message timeout'));
+			   }, my.cfg['PIPE_TIMEOUT']);		
+	      }
 	    }
 	    else
 	      unauthorized(ctx);

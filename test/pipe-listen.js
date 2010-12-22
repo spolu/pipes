@@ -8,8 +8,6 @@ if(process.argv.length < 3) {
 }
 var regid = process.argv[2];
 
-pipe.subscribe(regid, 'pipe-simple');
-
 pipe.on('1w', function(id, msg) {
 	  console.log('RECEIVED 1w:' + id + ':' + msg.subject() + " - " + msg.body());	  
 	});
@@ -28,9 +26,12 @@ pipe.on('2w', function(id, msg) {
 	});
 
 pipe.on('error', function(err, id) {
-	  console.log(id + ': error');
 	  if(err)
-	    console.log(id + ":" + err.stack);
+	    console.log(id + ": error " + err.message);	  
+	});
+
+pipe.on('stop', function(id) {
+	  console.log(id + ': stop');
 	});
 
 pipe.on('connect', function(id) {
@@ -40,3 +41,13 @@ pipe.on('connect', function(id) {
 pipe.on('disconnect', function(id) {
 	  console.log(id + ': disconnect');
 	});
+
+pipe.on('removed', function(id) {
+	  console.log(id + ': removed');
+	});
+
+pipe.on('added', function(id) {
+	  console.log(id + ': added');
+	});
+
+pipe.subscribe(regid, 'pipe-simple');

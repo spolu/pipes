@@ -118,8 +118,13 @@ var registration = function(spec, my) {
     return my.router(my.subs);
   };
   
-  queue = function(msg) {
+  queue = function(ctx, msg) {    
     my.queue.push(msg);
+    if(msg.type() === '2w') {
+      ctx.on('finalize', function(ctx) {
+	       my.queue.remove(msg);
+	     });     
+    }
   };
   
   pump = function() {
@@ -209,7 +214,7 @@ var router = function(spec, my) {
   };
 
   /** Helper function to forward a 1w or 2w message to the registrations */
-  forward = function(msg) {
+  forward = function(ctx, msg) {
     var done = false;
     for(var id in my.regs) {      
       if(my.regs.hasOwnProperty(id)) {
@@ -218,11 +223,11 @@ var router = function(spec, my) {
 	  done = true;
 	  var r = reg.router();
 	  if(r.ok) {
-	    reg.queue(msg);
+	    reg.queue(ctx, msg);
 	    reg.pump();
 	  }
 	  else
-	    reg.queue(msg);
+	    reg.queue(ctx, msg);
 	}	
       }      
     }
@@ -232,11 +237,6 @@ var router = function(spec, my) {
   /** Helper function to ack a '1w' or 'r' message */
   ack = function(ctx, msg, cb_) {
     var ackmsg = fwk.message.ack(msg);
-    ackmsg.setHeader('Set-Cookie', fwk.generateAuthSetCookie(
-		       { config: my.cfg,
-			 key: my.cfg['PIPE_HMAC_KEY'],
-			 user: 'admin',
-			 expiry: new Date("December 31, 2010 11:13:00") }));
     callback(ctx, cb_, ackmsg);
   };
   
@@ -247,8 +247,8 @@ var router = function(spec, my) {
   route = function(ctx, msg, cb_) {
     /** oneways handling */
     if(msg.type() === '1w') {
-      if(!forward(msg)) {
-	ctx.error(new Error('No matching registration'));
+      if(!forward(ctx, msg)) {
+	ctx.error(new Error('1w: no matching registration'));
 	return;      
       }
       ctx.log.out('1w ' + msg.toString());
@@ -266,8 +266,8 @@ var router = function(spec, my) {
 	     });    
       
       /** forwarding must be done after registration */
-      if(!forward(msg)) {
-	ctx.error(new Error('No matching registration'));      
+      if(!forward(ctx, msg)) {
+	ctx.error(new Error('2w: no matching registration'));      
 	return;      
       }
     }    
@@ -276,11 +276,11 @@ var router = function(spec, my) {
       var m = my.twoways[msg.tint()];
       if(m) {
 	ctx.log.out('r ' + msg.toString());
-	/** we reply the original 2w message (registration should be removed */
+	/** we reply the original 2w message (registration should be removed) */
 	callback(m.ctx, m.cb_, msg);
 	ack(ctx, msg, cb_);
       } else {
-	ctx.error(new Error('Message already replied or timeouted'));
+	ctx.error(new Error('reply: essage already replied or timeouted'));
 	return;            
       }
     }    
@@ -291,7 +291,7 @@ var router = function(spec, my) {
     if(my.regs.hasOwnProperty(id)) {
       while(my.regs[id].subs().length > 0) {	
 	var s = my.regs[id].subs().pop();
-	s.ctx().error(new Error('Registration with id: ' + id + ' was removed'));
+	s.ctx().error(new Error('unregister: ' + id));
       }
       ctx.log.out('unregister: ' + id);    
       delete my.regs[id];
@@ -318,7 +318,7 @@ var router = function(spec, my) {
   /** Subscribe a context for a given subscription id */
   subscribe = function(ctx, id, tag, cb_) {    
     if(!my.regs[id]) {
-      ctx.error(new Error('No registration for id: ' + id));
+      ctx.error(new Error('subscribe: ' + id + ' unknown'));
       return;
     }
     var s = subscription({ctx: ctx, tag: tag, cb_: cb_});
