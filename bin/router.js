@@ -208,8 +208,9 @@ var router = function(spec, my) {
   
   var that = {};
 
-  var callback, forward, ack, route, 
-      register, unregister, subscribe, list, reg;
+  var callback, forward, ack, route; 
+  var register, unregister, subscribe, list;
+  var shutdown;
 
   /** Helper function to execute a callback. */
   callback = function(ctx, cb_, msg) {
@@ -349,9 +350,17 @@ var router = function(spec, my) {
     return data;
   };
   
-
-  reg = function(id) {
-    return my.regs[id];
+  shutdown = function(ctx) {
+    for(var i in my.regs) {
+      if(my.regs.hasOwnProperty(i))
+	unregister(ctx, i);
+    }    
+    for(var j in my.twoways) {
+      if(my.twoways.hasOwnProperty(j)) {
+	if(!my.twoways[j].ctx.finalized())
+	  my.twoways[j].ctx.error(new Error('pipe shutdown'));
+      }
+    }
   };
 
   
@@ -360,10 +369,8 @@ var router = function(spec, my) {
   that.method('unregister', unregister);  
   that.method('subscribe', subscribe);  
   that.method('list', list);
+  that.method('shutdown', shutdown);
   
-  that.method('reg', reg);
-  that.getter('regs', my, 'regs');
-
   return that;
 };
 

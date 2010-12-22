@@ -1,7 +1,7 @@
 {
   "name": "pipe",
   "description": "Alaryo Pipe Messaging Library and Binary",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "author": "Stanislas Polu <stan@alaryo.com>",
   "keywords": ["alaryo", "messaging", "library", "binary"],
   "dependencies": {"fwk": ">= 0.1.0" },

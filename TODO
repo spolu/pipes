@@ -4,16 +4,18 @@ TODO lib:
 
 TODO bin:
 
-- gracious shutdown
 - add index serving with basic information
 - add monitoring registration (non queuing): error / status
 
 TODO ctl:
 
 
+CHANGELOG v0.1.2:
+
 
 CHANGELOG v0.1.1:
 
+- gracious shutdown remotely or with SIGINT
 - fix ordering queued messages in registrations
 - messages transmited count per registration and subscription
 - improved error messages

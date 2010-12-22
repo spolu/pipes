@@ -33,7 +33,8 @@ var pipectl = function(spec, my) {
   
   var that = {};
   
-  var readfile, usage, help, main, register, unregister, grant, revoke, list;
+  var readfile, usage, help, main, register, unregister, grant, revoke;
+  var list, shutdown;
   
   /** cb_(err, data) */
   readfile = function(path, cb_) {
@@ -85,6 +86,12 @@ var pipectl = function(spec, my) {
       console.log('Usage: pipectl list <reg|auth> [id]');
       console.log('');
       break;
+
+    case 'shutdown':
+      console.log('');
+      console.log('Usage: pipectl shutdown');
+      console.log('');
+      break;
       
     default:
       usage();
@@ -96,7 +103,8 @@ var pipectl = function(spec, my) {
     console.log('Usage: pipectl <command>');
     console.log('');
     console.log('<comand> is one of:');
-    console.log('   register, unregister, grant, revoke, list');
+    console.log('   register, unregister, grant, revoke');
+    console.log('   list, shutdown');
     console.log('');
     console.log('Config values can be specified in the ENV or');
     console.log('on the command line using:');
@@ -107,11 +115,6 @@ var pipectl = function(spec, my) {
   main = function() {
     var args = fwk.extractArgvs();
     args = args.slice(2);
-    if(args.length < 2)
-      
-    
-    for (var i = 0; i < args.length; i ++)
-      util.debug(args[i]);
     
     if(args.length == 0) { usage(); return; }
     
@@ -161,6 +164,14 @@ var pipectl = function(spec, my) {
 	return; 	
       }
       list(args[1], args[2]);
+      break;
+      
+    case 'shutdown':
+      if(args.length != 1) { 
+	help('shutdown'); 
+	return; 
+      }
+      shutdown();     	
       break;
 
     default:
@@ -345,6 +356,17 @@ var pipectl = function(spec, my) {
       });
     
   };    
+  
+  shutdown = function(id) {
+    my.pipe.shutdown(
+      function(err) {
+	if(err) {
+	  console.log(err.stack);
+	  process.exit();
+	}
+	console.log('DONE');
+      });
+  };
 
   that.method('main', main);
   

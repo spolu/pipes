@@ -32,6 +32,7 @@ var pipe = function(spec, my) {
   
   var handler, error, unauthorized, notfound;
   var message, subscribe, register, unregister, grant, revoke, list;
+  var shutdown;
   
   handler = function(req, res) {
     var ctx = context.context({ request: req,
@@ -72,40 +73,47 @@ var pipe = function(spec, my) {
     case '/sub':
       if(user === my.cfg['PIPE_ADMIN_USER'] && auth)
 	subscribe(ctx, urlreq.query);
-      else unauthorized(ctx);
+      else notfound(ctx);
       break;
       
       /** registration */
     case '/reg':
       if(user === my.cfg['PIPE_ADMIN_USER'] && auth)
 	register(ctx, urlreq.query);
-      else unauthorized(ctx);
+      else notfound(ctx);
       break;
     case '/unr':
       if(user === my.cfg['PIPE_ADMIN_USER'] && auth)
 	unregister(ctx, urlreq.query);
-      else unauthorized(ctx);
+      else notfound(ctx);
       break;
       
       /** grant */
     case '/grt':
       if(user === my.cfg['PIPE_ADMIN_USER'] && auth)
 	grant(ctx, urlreq.query);
-      else unauthorized(ctx);
+      else notfound(ctx);
       break;
     case '/rvk':
       if(user === my.cfg['PIPE_ADMIN_USER'] && auth)
 	revoke(ctx, urlreq.query);
-      else unauthorized(ctx);
+      else notfound(ctx);
       break;
       
       /** list */
     case '/lst':
       if(user === my.cfg['PIPE_ADMIN_USER'] && auth)
 	list(ctx, urlreq.query);
-      else unauthorized(ctx);
+      else notfound(ctx);
       break;
-            
+      
+      /** shutdown */
+    case '/sht':
+      if(user === my.cfg['PIPE_ADMIN_USER'] && auth)
+	shutdown(ctx);
+      else notfound(ctx);
+      break;
+
     default:
       notfound(ctx);
     }    
@@ -399,11 +407,28 @@ var pipe = function(spec, my) {
 	  else
 	    ctx.error(new Error('list: no kind specified'));		   		     
 	} catch (err) { ctx.error(err, true); }
-      });  
-    
+      });      
   };
   
-
+  shutdown = function(ctx) {
+    ctx.log.out('shutdown');
+    my.server.close();
+    my.router.shutdown(ctx);
+    
+    if(ctx.response()) {
+      ctx.response().writeHead(200, {'Content-Type': 'text/plain;'});
+      ctx.multi().on('chunk', function(chunk) { ctx.response().write(chunk); });
+      ctx.multi().send('done');
+      ctx.response().end();
+      ctx.finalize();
+    }
+  };  
+  
+  process.on('SIGINT', function () {
+	       shutdown(context.context({ logger: my.logger,
+					  config: my.cfg }));
+	     });
+  
   my.server.on('request', handler);
   
   my.server.listen(my.port);
@@ -412,4 +437,5 @@ var pipe = function(spec, my) {
 };
 
 /** main */
-pipe({});
+var p = pipe({});
+
