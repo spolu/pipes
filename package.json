@@ -6,6 +6,6 @@
   "keywords": ["alaryo", "messaging", "library", "binary"],
   "dependencies": {"fwk": ">= 0.1.0" },
   "main" : "./lib/pipe",
-  "bin" : "./bin/pipe",
+  "bin" : { "pipe" : "./bin/pipe", "pipectl" : "./bin/pipectl" }, 
   "engines": { "node": ">= 0.3.1" }
 }

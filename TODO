@@ -1,17 +1,24 @@
 TODO lib:
-- max concurrent connection
+
+- registration removal or not present cause subscription removal
+- Max concurrent connection
 - advanced test unregister with active subs
 
 TODO bin:
+
+- gracious shutdown
 - add timeout for message + queue removal
+- add nb messages transited per registration and subscription
 - add index serving with basic information
-- monitoring tools
 - add monitoring registration (non queuing): error / status
+
+TODO ctl:
+
 
 
 CHANGELOG v0.1.1:
 
-- admin tools (list)
+- admin and monitoring API and tools (pipectl)
 - access control function over network /grt 
 - refactor server.js into bin/pipe.js
 - removed timeout for subscription
