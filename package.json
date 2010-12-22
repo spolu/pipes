@@ -4,7 +4,7 @@
   "version": "0.1.1",
   "author": "Stanislas Polu <stan@alaryo.com>",
   "keywords": ["alaryo", "messaging", "library", "binary"],
-  "dependencies": {"fwk": ">= 0.1.0" },
+  "dependencies": {"fwk": ">= 0.1.1" },
   "main" : "./lib/pipe",
   "bin" : { "pipe" : "./bin/pipe", "pipectl" : "./bin/pipectl" }, 
   "engines": { "node": ">= 0.3.1" }
