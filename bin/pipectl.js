@@ -265,8 +265,9 @@ var pipectl = function(spec, my) {
       };
       add('' + reg.id);
       add('[' + reg.tag + ']');
-      add(' subs:' + reg.subs.length);
-      add(' size:' + reg.size);
+      add('subs:' + reg.subs.length);
+      add('size:' + reg.size);
+      add('count:' + reg.count);
       
       return line;
     };
@@ -279,6 +280,7 @@ var pipectl = function(spec, my) {
       };
       add('' + sub.id);
       add('[' + sub.tag + ']');
+      add('count:' + sub.count);
       
       return line;
     };

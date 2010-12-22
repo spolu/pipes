@@ -5,7 +5,6 @@ TODO lib:
 TODO bin:
 
 - gracious shutdown
-- add nb messages transited per registration and subscription
 - add index serving with basic information
 - add monitoring registration (non queuing): error / status
 
@@ -15,6 +14,8 @@ TODO ctl:
 
 CHANGELOG v0.1.1:
 
+- fix ordering queued messages in registrations
+- messages transmited count per registration and subscription
 - improved error messages
 - subscription stop to remove dangling subscritpion (no more reg)
 - timeout for 2w message + registration queue removal
@@ -22,7 +23,7 @@ CHANGELOG v0.1.1:
 - access control function over network /grt 
 - refactor server.js into bin/pipe.js
 - removed timeout for subscription
-- pipe error ar no longer termination conditions
+- pipe error are no longer termination conditions
 - add default registration (non queuing): all
 - rename piped -> pipe
 - merge of piped and pipe

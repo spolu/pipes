@@ -17,13 +17,16 @@ var subscription = function(spec, my) {
     my.id = spec.ctx.tint();
   my.tag = spec.tag;
   my.cb_ = spec.cb_;  
-
+  
+  my.count = 0;
+  
   var that = {};
 
   var forward, describe;
   
   forward = function(msg) {
     try{
+      my.count++;
       my.cb_(msg);
     } catch (err) {
       my.ctx.error(err, true);
@@ -32,7 +35,8 @@ var subscription = function(spec, my) {
   
   describe = function() {
     return { id: my.id,
-	     tag: my.tag };
+	     tag: my.tag,
+	     count: my.count };
   };
 
   that.getter('ctx', my, 'ctx');
@@ -70,6 +74,7 @@ var registration = function(spec, my) {
   my.queue = [];    
   my.tag = spec.tag;
   my.subs = [];
+  my.count = 0;  
 
   if(spec.filter && typeof spec.filter === 'function') {
     my.filter = function(m) { 
@@ -119,6 +124,7 @@ var registration = function(spec, my) {
   };
   
   queue = function(ctx, msg) {    
+    my.count++;
     my.queue.push(msg);
     if(msg.type() === '2w') {
       ctx.on('finalize', function(ctx) {
@@ -130,11 +136,11 @@ var registration = function(spec, my) {
   pump = function() {
     var q = [];
     while(my.queue.length > 0) {
-      msg = my.queue.pop();
+      msg = my.queue.shift();
       var r = router();
       if(r.ok) {
 	for(var i = 0; i < r.subs.length; i ++)
-	  r.subs[i].forward(msg);
+	  r.subs[i].forward(msg);	  
       }
       else
 	q.push(msg);	
@@ -147,7 +153,8 @@ var registration = function(spec, my) {
 		 tag: my.tag,
 		 filter: my.filterdata,
 		 router: my.routerdata,
-		 size: my.queue.length };
+		 size: my.queue.length,
+		 count: my.count };
     data.subs = [];
     my.subs.forEach(function(sub) {
 		      data.subs.push(sub.describe());

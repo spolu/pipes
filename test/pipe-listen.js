@@ -9,7 +9,7 @@ if(process.argv.length < 3) {
 var regid = process.argv[2];
 
 pipe.on('1w', function(id, msg) {
-	  console.log('RECEIVED 1w:' + id + ':' + msg.subject() + " - " + msg.body());	  
+	  console.log('RECEIVED 1w:' + id + ':' + msg.tint() + ' ' + msg.subject() + " - " + msg.body());	  
 	});
 
 pipe.on('2w', function(id, msg) {
