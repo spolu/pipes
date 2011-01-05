@@ -1,10 +1,10 @@
 {
   "name": "pipe",
-  "description": "Alaryo Pipe Messaging Library and Binary",
-  "version": "0.1.1",
-  "author": "Stanislas Polu <stan@alaryo.com>",
-  "keywords": ["alaryo", "messaging", "library", "binary"],
-  "dependencies": {"fwk": ">= 0.1.1" },
+  "description": "Pipe Messaging Library and Binary",
+  "version": "0.1.2",
+  "author": "Stanislas Polu <stan@bipsly.com>",
+  "keywords": ["messaging", "library", "binary"],
+  "dependencies": {"fwk": ">= 0.1.2" },
   "main" : "./lib/pipe",
   "bin" : { "pipe" : "./bin/pipe", "pipectl" : "./bin/pipectl" }, 
   "engines": { "node": ">= 0.3.1" }

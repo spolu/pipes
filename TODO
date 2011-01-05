@@ -4,14 +4,15 @@ TODO lib:
 
 TODO bin:
 
+- add monitoring registration (non queuing): error / status [especially error]
 - add index serving with basic information
-- add monitoring registration (non queuing): error / status
 
 TODO ctl:
 
 
 CHANGELOG v0.1.2:
 
+- moved context for http request & client to fwk
 
 CHANGELOG v0.1.1:
 

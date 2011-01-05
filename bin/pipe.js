@@ -4,7 +4,6 @@ var util = require('util');
 var fwk = require('fwk');
 
 var cfg = require("./config.js");
-var context = require("./context.js");
 
 /** 
  * The Pipe Server Object
@@ -35,10 +34,10 @@ var pipe = function(spec, my) {
   var shutdown;
   
   handler = function(req, res) {
-    var ctx = context.context({ request: req,
-				response: res,
-				logger: my.logger,
-				config: my.cfg });
+    var ctx = fwk.context({ request: req,
+			    response: res,
+			    logger: my.logger,
+			    config: my.cfg });
     ctx.request().setEncoding('utf8');
     urlreq = url.parse(ctx.request().url, true);
     ctx.push('cmd:' + urlreq.pathname.substring(1));
@@ -425,8 +424,8 @@ var pipe = function(spec, my) {
   };  
   
   process.on('SIGINT', function () {
-	       shutdown(context.context({ logger: my.logger,
-					  config: my.cfg }));
+	       shutdown(fwk.context({ logger: my.logger,
+				      config: my.cfg }));
 	     });
   
   my.server.on('request', handler);
