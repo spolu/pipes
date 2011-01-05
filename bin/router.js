@@ -131,7 +131,7 @@ var registration = function(spec, my) {
   queue = function(ctx, msg) {    
     my.count++;
     my.queue.push(msg);
-    if(msg.type() === '2w') {
+    if(msg.type() === '2w' || msg.type() === '2w-c') {
       ctx.on('finalize', function(ctx) {
 	       my.queue.remove(msg);
 	     });     
@@ -214,7 +214,8 @@ var router = function(spec, my) {
   /** config default registration */
   my.regs['config'] = registration({ ctx: fwk.context({}, {tint: 'config'}),
 				     filter: function(msg) {
-				       return msg.type() === 'c';
+				       return (msg.type() === '1w-c' ||
+					       msg.type() === '2w-c');
 				     },
 				     router: function(subs, msg) {
 				       var res = [];
@@ -245,7 +246,7 @@ var router = function(spec, my) {
     }
   };
 
-  /** Helper function to forward a 1w,r,c or 2w message to the registrations */
+  /** Helper function to forward a 1w,1w-c,r or 2w,2w-c message to the registrations */
   forward = function(ctx, msg) {
     var done = false;
     for(var id in my.regs) {      
@@ -274,7 +275,7 @@ var router = function(spec, my) {
   
   /** 
    * Route a msg to matching subs
-   * cb_(msg) is called once the message is accepted (1w, r, c) or replied (2w) 
+   * cb_(msg) is called once the message is accepted (1w, r, c) or replied (2w, 2w-c) 
    */
   route = function(ctx, msg, cb_) {
     /** oneways handling */
@@ -319,16 +320,34 @@ var router = function(spec, my) {
       }
     }
     
-    /** config handling */
-    else if(msg.type() === 'c') {
+    /** config oneways handling */
+    else if(msg.type() === '1w-c') {
       if(!forward(ctx, msg)) {
-	ctx.error(new Error('c: no matching registration'));
+	ctx.error(new Error('1w-c: no matching registration'));
 	return;      
       }
       ctx.log.out('c ' + msg.toString());
       ack(ctx, msg, cb_);
     }   
     
+    /** config twoways handling */
+    else if(msg.type() === '2w-c') {
+      ctx.log.out('2w-c ' + msg.toString());
+      my.twoways[msg.tint()] = {'msg': msg, 
+				'cb_': cb_,
+				'ctx': ctx};
+      
+      ctx.on('finalize', function(ctx) {
+	       delete my.twoways[msg.tint()];
+	     });    
+      
+      /** forwarding must be done after registration */
+      if(!forward(ctx, msg)) {
+	ctx.error(new Error('2w-c: no matching registration'));      
+	return;      
+      }
+    }
+
     /** no matching type */
     else {
       ctx.error(new Error('unknown msg type: ' + msg.type()));
