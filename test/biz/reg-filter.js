@@ -1,3 +1,3 @@
 function (msg) {
-  return true;
+  return msg.type() !== 'c';
 }

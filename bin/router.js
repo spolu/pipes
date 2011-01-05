@@ -92,14 +92,19 @@ var registration = function(spec, my) {
     my.filter = function() { return false; };
   
   /**
-   * Router does not take the msg so that go or no go
-   * decision is independent of the msg. This will force
+   * Router should not take the msg so that go or no go
+   * decision is independent of the msg. This forces
    * the user to create cleanly separated registration
+   * 
+   * As an undocumented interface we passe the msg anyway
+   * to support config message routing according to
+   * the subscription tag. router function is called multiple
+   * time per message!
    */
   if(spec.router && typeof spec.router === 'function') {
-    my.router = function(s) { 
+    my.router = function(s, m) { 
       try{
-	return spec.router(s);
+	return spec.router(s, m);
       } catch (err) {
 	/** silently catch exceptions but log */
 	my.ctx.log.error(err, true);
@@ -119,8 +124,8 @@ var registration = function(spec, my) {
     return my.filter(msg);
   };
 
-  router = function() {
-    return my.router(my.subs);
+  router = function(msg) {
+    return my.router(my.subs, msg);
   };
   
   queue = function(ctx, msg) {    
@@ -137,7 +142,7 @@ var registration = function(spec, my) {
     var q = [];
     while(my.queue.length > 0) {
       msg = my.queue.shift();
-      var r = router();
+      var r = router(msg);
       if(r.ok) {
 	for(var i = 0; i < r.subs.length; i ++)
 	  r.subs[i].forward(msg);	  
@@ -202,9 +207,28 @@ var router = function(spec, my) {
 				    return true;
 				  },
 				  router: function(subs) {
-				    /** this prevents queueing */
+				    /** prevents queueing */
 				    return {subs: subs, ok: true};
 				  } });
+  
+  /** config default registration */
+  my.regs['config'] = registration({ ctx: fwk.context({}, {tint: 'config'}),
+				     filter: function(msg) {
+				       return msg.type() === 'c';
+				     },
+				     router: function(subs, msg) {
+				       var res = [];
+				       for(var i = 0; i < subs.length; ++i) {
+					 for(var j = 0; j < msg.targets().length; ++j) {
+					   if(subs[i].tag() === msg.targets()[j]) {
+					     res.push(subs[i]);
+					     break;
+					   }
+					 }
+				       }
+				       /** prevents queueing */
+				       return {subs: res, ok: true };
+				     } });
   
   var that = {};
 
@@ -221,7 +245,7 @@ var router = function(spec, my) {
     }
   };
 
-  /** Helper function to forward a 1w or 2w message to the registrations */
+  /** Helper function to forward a 1w,r,c or 2w message to the registrations */
   forward = function(ctx, msg) {
     var done = false;
     for(var id in my.regs) {      
@@ -229,7 +253,7 @@ var router = function(spec, my) {
 	var reg = my.regs[id];	
 	if(reg.filter(msg)) {
 	  done = true;
-	  var r = reg.router();
+	  var r = reg.router(msg);
 	  if(r.ok) {
 	    reg.queue(ctx, msg);
 	    reg.pump();
@@ -242,7 +266,7 @@ var router = function(spec, my) {
     return done;
   };
 
-  /** Helper function to ack a '1w' or 'r' message */
+  /** Helper function to ack a '1w', 'r' or 'c' messages */
   ack = function(ctx, msg, cb_) {
     var ackmsg = fwk.message.ack(msg);
     callback(ctx, cb_, ackmsg);
@@ -250,7 +274,7 @@ var router = function(spec, my) {
   
   /** 
    * Route a msg to matching subs
-   * cb_(msg) is called once the message is accepted (1w, r) or replied (2w) 
+   * cb_(msg) is called once the message is accepted (1w, r, c) or replied (2w) 
    */
   route = function(ctx, msg, cb_) {
     /** oneways handling */
@@ -262,6 +286,7 @@ var router = function(spec, my) {
       ctx.log.out('1w ' + msg.toString());
       ack(ctx, msg, cb_);
     }   
+    
     /** twoways handling */
     else if(msg.type() === '2w') {
       ctx.log.out('2w ' + msg.toString());
@@ -278,7 +303,8 @@ var router = function(spec, my) {
 	ctx.error(new Error('2w: no matching registration'));      
 	return;      
       }
-    }    
+    }
+    
     /** replies handling */
     else if(msg.type() === 'r') {
       var m = my.twoways[msg.tint()];
@@ -288,10 +314,26 @@ var router = function(spec, my) {
 	callback(m.ctx, m.cb_, msg);
 	ack(ctx, msg, cb_);
       } else {
-	ctx.error(new Error('reply: essage already replied or timeouted'));
+	ctx.error(new Error('r: message already replied or timeouted'));
 	return;            
       }
-    }    
+    }
+    
+    /** config handling */
+    else if(msg.type() === 'c') {
+      if(!forward(ctx, msg)) {
+	ctx.error(new Error('c: no matching registration'));
+	return;      
+      }
+      ctx.log.out('c ' + msg.toString());
+      ack(ctx, msg, cb_);
+    }   
+    
+    /** no matching type */
+    else {
+      ctx.error(new Error('unknown msg type: ' + msg.type()));
+      return;            
+    }
   };
 
   /** Unregister a filter. Any sub is returned with a specific error */

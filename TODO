@@ -12,6 +12,7 @@ TODO ctl:
 
 CHANGELOG v0.1.2:
 
+- added config default registration and 'c' message type
 - moved context for http request & client to fwk
 
 CHANGELOG v0.1.1:
