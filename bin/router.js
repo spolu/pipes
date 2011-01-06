@@ -309,8 +309,8 @@ var router = function(spec, my) {
     /** replies handling */
     else if(msg.type() === 'r') {
       var m = my.twoways[msg.tint()];
+      ctx.log.out('r ' + msg.toString());
       if(m) {
-	ctx.log.out('r ' + msg.toString());
 	/** we reply the original 2w message (registration should be removed) */
 	callback(m.ctx, m.cb_, msg);
 	ack(ctx, msg, cb_);
