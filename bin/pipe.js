@@ -177,8 +177,8 @@ var pipe = function(spec, my) {
 		  ctx.response().end();
 		  ctx.finalize();	 
 		});
-	      /** timeout 2w, 2w-c */
-	      if(msg.type() === '2w' || msg.type() === '2w-c') {
+	      /** timeout 2w, c */
+	      if(msg.type() === '2w' || msg.type() === 'c') {
 		setTimeout(function() {
 			     if(!ctx.finalized())
 			       ctx.error(new Error('message timeout'));

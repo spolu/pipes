@@ -131,7 +131,7 @@ var registration = function(spec, my) {
   queue = function(ctx, msg) {    
     my.count++;
     my.queue.push(msg);
-    if(msg.type() === '2w' || msg.type() === '2w-c') {
+    if(msg.type() === '2w' || msg.type() === 'c') {
       ctx.on('finalize', function(ctx) {
 	       my.queue.remove(msg);
 	     });     
@@ -214,8 +214,7 @@ var router = function(spec, my) {
   /** config default registration */
   my.regs['config'] = registration({ ctx: fwk.context({}, {tint: 'config'}),
 				     filter: function(msg) {
-				       return (msg.type() === '1w-c' ||
-					       msg.type() === '2w-c');
+				       return (msg.type() === 'c');
 				     },
 				     router: function(subs, msg) {
 				       var res = [];
@@ -246,7 +245,7 @@ var router = function(spec, my) {
     }
   };
 
-  /** Helper function to forward a 1w,1w-c,r or 2w,2w-c message to the registrations */
+  /** Helper function to forward a 1w,r or 2w,c message to the registrations */
   forward = function(ctx, msg) {
     var done = false;
     for(var id in my.regs) {      
@@ -275,7 +274,7 @@ var router = function(spec, my) {
   
   /** 
    * Route a msg to matching subs
-   * cb_(msg) is called once the message is accepted (1w, r, c) or replied (2w, 2w-c) 
+   * cb_(msg) is called once the message is accepted (1w, r) or replied (2w, c) 
    */
   route = function(ctx, msg, cb_) {
     /** oneways handling */
@@ -320,19 +319,12 @@ var router = function(spec, my) {
       }
     }
     
-    /** config oneways handling */
-    else if(msg.type() === '1w-c') {
-      if(!forward(ctx, msg)) {
-	ctx.error(new Error('1w-c: no matching registration'));
-	return;      
-      }
+    /** config handling (twoways) */
+    else if(msg.type() === 'c') {
       ctx.log.out('c ' + msg.toString());
-      ack(ctx, msg, cb_);
-    }   
-    
-    /** config twoways handling */
-    else if(msg.type() === '2w-c') {
-      ctx.log.out('2w-c ' + msg.toString());
+      /** if there is no registration for the message target
+       * it will timeout which is ok since volume is low
+       */
       my.twoways[msg.tint()] = {'msg': msg, 
 				'cb_': cb_,
 				'ctx': ctx};
@@ -343,7 +335,7 @@ var router = function(spec, my) {
       
       /** forwarding must be done after registration */
       if(!forward(ctx, msg)) {
-	ctx.error(new Error('2w-c: no matching registration'));      
+	ctx.error(new Error('c: no matching registration'));      
 	return;      
       }
     }

@@ -5,14 +5,14 @@ TODO lib:
 TODO bin:
 
 - add monitoring registration (non queuing): error / status [especially error]
-- add index serving with basic information
+- add index.html serving with basic information
 
 TODO ctl:
 
 
 CHANGELOG v0.1.2:
 
-- changed 'c' message for '1w-c' and '2w-c'
+- changed 'c' to be always 2w
 - added config default registration and 'c' message type
 - moved context for http request & client to fwk
 

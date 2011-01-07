@@ -33,62 +33,40 @@ var pipectl = function(spec, my) {
   
   var that = {};
   
-  var readfile, usage, help, main, register, unregister, grant, revoke;
+  var usage, help, main;
+  var register, unregister, grant, revoke;
   var list, shutdown;
   
-  /** cb_(err, data) */
-  readfile = function(path, cb_) {
-    var cb_ = cb_.once();
-    var stream = fs.createReadStream(path);
-    var data = '';
-    stream.on('data', function(chunk) {
-		data += chunk;
-	      });
-    stream.on('error', function(err) {
-		stream.destroy();
-		cb_(err);
-	      });
-    stream.on('end', function() {
-		cb_(null, data);
-	      });
-  };
-
   help = function (cmd) {
 
     switch(cmd) {
 
     case 'register':
-      console.log('');
       console.log('Usage: pipectl register <filter.js> <router.js> [tag]');
       console.log('');
       break;
       
     case 'unregister':
-      console.log('');
       console.log('Usage: pipectl unregister <id>');
       console.log('');
       break;
       
     case 'grant':
-      console.log('');
       console.log('Usage: pipectl grant <filter.js> [tag]');
       console.log('');
       break;
       
     case 'revoke':
-      console.log('');
       console.log('Usage: pipectl revoke <id>');
       console.log('');
       break;
       
     case 'list':
-      console.log('');
       console.log('Usage: pipectl list <reg|auth> [id]');
       console.log('');
       break;
 
     case 'shutdown':
-      console.log('');
       console.log('Usage: pipectl shutdown');
       console.log('');
       break;
@@ -99,7 +77,6 @@ var pipectl = function(spec, my) {
   };
   
   usage = function() {
-    console.log('');
     console.log('Usage: pipectl <command>');
     console.log('');
     console.log('<comand> is one of:');
@@ -185,23 +162,23 @@ var pipectl = function(spec, my) {
     var filter, router;
     var done;
     
-    readfile(fpath, function(err, data) {
-	       if(err) {
-		 console.log(err.stack);
-		 process.exit();
-	       }
-	       filter = data;
-	       done();
-	     });
-
-    readfile(rpath, function(err, data) {
-	       if(err) {
-		 console.log(err.stack);
-		 process.exit();
-	       }
-	       router = data;
-	       done();
-	     });
+    fwk.readfile(fpath, function(err, data) {
+		   if(err) {
+		     console.log(err.stack);
+		     process.exit();
+		   }
+		   filter = data;
+		   done();
+		 });
+    
+    fwk.readfile(rpath, function(err, data) {
+		   if(err) {
+		     console.log(err.stack);
+		     process.exit();
+		   }
+		   router = data;
+		   done();
+		 });
     
 
     done = function() {
@@ -234,22 +211,22 @@ var pipectl = function(spec, my) {
   
 
   grant = function(fpath, tag) {
-    readfile(fpath, function(err, data) {
-	       if(err) {
-		 console.log(err.stack);
-		 process.exit();
-	       }
-	       var filter = data;
-	       my.pipe.grant(
-		 tag, filter, 
-		 function(err, id) {
+    fwk.readfile(fpath, function(err, data) {
 		   if(err) {
 		     console.log(err.stack);
 		     process.exit();
 		   }
-		   console.log(id);
-		 });
-	     });    
+		   var filter = data;
+		   my.pipe.grant(
+		     tag, filter, 
+		     function(err, id) {
+		       if(err) {
+			 console.log(err.stack);
+			 process.exit();
+		       }
+		       console.log(id);
+		     });
+		 });    
   };
   
 
@@ -289,7 +266,7 @@ var pipectl = function(spec, my) {
       var add = function(str) {
 	line += str + blank.slice(str.length);		  
       };
-      add('' + sub.id);
+      add('  ' + sub.id);
       add('[' + sub.tag + ']');
       add('count:' + sub.count);
       
@@ -321,10 +298,11 @@ var pipectl = function(spec, my) {
 	case 'reg':
 	  if(id) {
 	    console.log(showreg(data[id]));
-	    console.log('');
+	    console.log('[');
 	    for(var i = 0; i < data[id].subs.length; i ++) {
 	      console.log(showsub(data[id].subs[i]));
 	    }
+	    console.log(']');
 	    console.log('\nFILTER:\n' + data[id].filter);
 	    console.log('\nROUTER\n' + data[id].router);
 	  } 
