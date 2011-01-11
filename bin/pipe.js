@@ -214,7 +214,6 @@ var pipe = function(spec, my) {
 	    }
 	    ctx.multi().send('msg', msg.serialize());
 	  });      
-	/** TODO add timeout */
       } else
 	ctx.error(new Error('subscribe: no id specified'));    
     } catch (err) { ctx.error(err, true); }
