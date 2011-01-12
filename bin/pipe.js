@@ -145,6 +145,7 @@ var pipe = function(spec, my) {
     ctx.multi().on(
       'recv', 
       function(type, body) {
+	ctx.log.debug('msg ' + type + ':' + body);
 	if(type === 'msg') {
 	  try {
 	    msg = fwk.message.deserialize(body);
