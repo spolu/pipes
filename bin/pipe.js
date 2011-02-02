@@ -31,7 +31,7 @@ var pipe = function(spec, my) {
   
   var handler, error, unauthorized, notfound;
   var message, subscribe, register, unregister, grant, revoke, list;
-  var shutdown;
+  var shutdown, check;
   
   handler = function(req, res) {
     var ctx = fwk.context({ request: req,
@@ -112,6 +112,11 @@ var pipe = function(spec, my) {
 	shutdown(ctx);
       else notfound(ctx);
       break;
+      
+      /** check */
+    case '/chk':
+      check(ctx);
+      break;
 
     default:
       notfound(ctx);
@@ -166,6 +171,7 @@ var pipe = function(spec, my) {
 	if(msg) {
 	  try {
 	    if(my.access.isgranted(ctx, msg)) {
+	      console.log(msg.toString() + ' ' + msg.body());
 	      my.router.route(
 		ctx, msg, 
 		function(reply) {
@@ -423,6 +429,18 @@ var pipe = function(spec, my) {
     }
   };  
   
+  check = function(ctx) {
+    ctx.log.out('check');
+
+    if(ctx.response()) {
+      ctx.response().writeHead(200, {'Content-Type': 'text/plain;'});
+      ctx.multi().on('chunk', function(chunk) { ctx.response().write(chunk); });
+      ctx.multi().send('ok');
+      ctx.response().end();
+      ctx.finalize();
+    }
+  };  
+
   process.on('SIGINT', function () {
 	       shutdown(fwk.context({ logger: my.logger,
 				      config: my.cfg }));
