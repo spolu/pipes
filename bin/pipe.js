@@ -124,7 +124,9 @@ var pipe = function(spec, my) {
   };
 
   error = function(ctx, code, reason) {
-    var data = code + ' {' + ctx.tint() + '} [' + reason + ']: '  + unescape(ctx.request().url);
+    var data = code + ' {' + ctx.tint() + '} [' + reason + ']: ';
+    if(ctx.request())
+      data += unescape(ctx.request().url);
     ctx.response().writeHead(code, {'Content-Length': data.length,
 				    'Content-Type': "text/html;"});
     ctx.response().write(data);
