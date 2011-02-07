@@ -12,6 +12,7 @@ TODO ctl:
 
 CHANGELOG v0.1.2:
 
+- fixed bug unexpected end of input + reproduced
 - added /chk for load balancing check
 - changed 'c' to be always 2w
 - added config default registration and 'c' message type
