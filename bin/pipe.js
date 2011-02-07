@@ -145,6 +145,8 @@ var pipe = function(spec, my) {
   
   message = function(ctx, query) {
     var msg;
+
+    ctx.log.debug('query: ' + util.inspect(query));
     
     ctx.request().on("data", function(chunk) { ctx.multi().recv(chunk); });
     ctx.request().on("end", function() { ctx.multi().end(); });
