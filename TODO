@@ -12,6 +12,7 @@ TODO ctl:
 
 CHANGELOG v0.1.2:
 
+- moved to node 0.3.8
 - fixed bug unexpected end of input + reproduced
 - added /chk for load balancing check
 - changed 'c' to be always 2w
