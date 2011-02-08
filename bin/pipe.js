@@ -146,6 +146,9 @@ var pipe = function(spec, my) {
   message = function(ctx, query) {
     var msg;
 
+    ctx.request().connection.setTimeout(0);
+    ctx.request().connection.setKeepAlive(true);
+
     ctx.log.debug('query: ' + util.inspect(query));
     
     ctx.request().on("data", function(chunk) { ctx.multi().recv(chunk); });
