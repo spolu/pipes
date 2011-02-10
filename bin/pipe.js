@@ -147,7 +147,6 @@ var pipe = function(spec, my) {
     var msg;
 
     ctx.request().connection.setTimeout(0);
-    ctx.request().connection.setKeepAlive(true);
 
     ctx.log.debug('query: ' + util.inspect(query));
     
@@ -219,7 +218,6 @@ var pipe = function(spec, my) {
 	var first = true;
 
 	ctx.request().connection.setTimeout(0);
-	ctx.request().connection.setKeepAlive(true);
 
 	my.router.subscribe(
 	  ctx, id, tag, 
