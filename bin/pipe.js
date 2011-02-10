@@ -228,6 +228,7 @@ var pipe = function(spec, my) {
 	      first = false;
 	    }
 	    ctx.multi().send('msg', msg.serialize());
+	    ctx.request().connection.setTimeout(0);
 	  });      
       } else
 	ctx.error(new Error('subscribe: no id specified'));    
