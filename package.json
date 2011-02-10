@@ -4,8 +4,10 @@
   "version": "0.1.2",
   "author": "Stanislas Polu <stan@bipsly.com>",
   "keywords": ["messaging", "library", "binary"],
-  "dependencies": {"fwk": ">= 0.1.2" },
+  "dependencies": {
+  	"fwk": ">= 0.1.2" 
+  },
   "main" : "./lib/pipe",
   "bin" : { "pipe" : "./bin/pipe", "pipectl" : "./bin/pipectl" }, 
-  "engines": { "node": ">= 0.3.1" }
+  "engines": { "node": ">= 0.3.8" }
 }

@@ -217,7 +217,10 @@ var pipe = function(spec, my) {
 	var id = query.id;
 	var tag = query.tag;      
 	var first = true;
+
 	ctx.request().connection.setTimeout(0);
+	ctx.request().connection.setKeepAlive(true);
+
 	my.router.subscribe(
 	  ctx, id, tag, 
 	  function(msg) {		
