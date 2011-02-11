@@ -1,13 +1,13 @@
 {
   "name": "pipe",
   "description": "Pipe Messaging Library and Binary",
-  "version": "0.1.2",
+  "version": "0.1.4",
   "author": "Stanislas Polu <stan@bipsly.com>",
   "keywords": ["messaging", "library", "binary"],
   "dependencies": {
-  	"fwk": ">= 0.1.2" 
+  	"fwk": ">= 0.1.4" 
   },
   "main" : "./lib/pipe",
   "bin" : { "pipe" : "./bin/pipe", "pipectl" : "./bin/pipectl" }, 
-  "engines": { "node": ">= 0.3.8" }
+  "engines": { "node": "0.4.x" }
 }

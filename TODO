@@ -1,20 +1,27 @@
 TODO lib:
 
-- Max concurrent connection
+- Max concurrent connection [agent did not arrange things]
 
 TODO bin:
 
+- add possibility of error message as reply for full stack error reporting
 - add monitoring registration (non queuing): error / status [especially error]
 - add index.html serving with basic information
 
 TODO ctl:
 
 
-CHANGELOG v0.1.2:
+NEXT CHANGELOG:
 
-- moved to node 0.3.8
+CHANGELOG v0.1.4:
+
+- cleanup log/debug
+- moved to node 0.4.0
 - fixed bug unexpected end of input + reproduced
 - added /chk for load balancing check
+
+CHANGELOG v0.1.2:
+
 - changed 'c' to be always 2w
 - added config default registration and 'c' message type
 - moved context for http request & client to fwk

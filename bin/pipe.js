@@ -177,7 +177,6 @@ var pipe = function(spec, my) {
 	if(msg) {
 	  try {
 	    if(my.access.isgranted(ctx, msg)) {
-	      console.log(msg.toString() + ' ' + msg.body());
 	      my.router.route(
 		ctx, msg, 
 		function(reply) {
