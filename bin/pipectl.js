@@ -1,3 +1,5 @@
+#!/usr/local/bin/node
+
 var util = require('util');
 var fs = require('fs');
 var fwk = require('fwk');

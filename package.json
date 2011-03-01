@@ -8,6 +8,6 @@
   	"fwk": ">= 0.1.4" 
   },
   "main" : "./lib/pipe",
-  "bin" : { "pipe" : "./bin/pipe", "pipectl" : "./bin/pipectl" }, 
-  "engines": { "node": "0.4.x" }
+  "bin" : { "pipe" : "./bin/pipe.js", "pipectl" : "./bin/pipectl.js" }, 
+  "engines": { "node": ">=0.4.0" }
 }
