@@ -21,7 +21,7 @@ var malformed = function(spec, my) {
   my.expiry = function() { 
     var d = new Date();
     d.setFullYear(d.getFullYear() + 1);
-    return d;
+    return d.getTime();
   }();
   
   my.cookie = fwk.generateAuthCookie({config: my.cfg,
