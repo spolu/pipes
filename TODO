@@ -13,6 +13,8 @@ TODO ctl:
 
 NEXT CHANGELOG:
 
+- BUG: error within callback would not be reported and would crash process
+
 CHANGELOG v0.1.4:
 
 - cleanup log/debug
