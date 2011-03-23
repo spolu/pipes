@@ -36,6 +36,7 @@ var pipe = function(spec, my) {
   var shutdown, check;
   
   handler = function(req, res) {
+    //util.debug('PIPE HANDLER');    
     var ctx = fwk.context({ request: req,
 			    response: res,
 			    logger: my.logger,
