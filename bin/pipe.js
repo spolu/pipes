@@ -151,7 +151,7 @@ var pipe = function(spec, my) {
 
     ctx.request().connection.setTimeout(0);
 
-    ctx.log.debug('query: ' + util.inspect(query));
+    //ctx.log.debug('query: ' + util.inspect(query));
     
     ctx.request().on("data", function(chunk) { ctx.multi().recv(chunk); });
     ctx.request().on("end", function() { ctx.multi().end(); });
@@ -159,7 +159,7 @@ var pipe = function(spec, my) {
     ctx.multi().on(
       'recv', 
       function(type, body) {
-	ctx.log.debug('msg ' + type + ':' + body);
+	ctx.log.log('msg ' + type + ':' + msg);
 	if(type === 'msg') {
 	  try {
 	    msg = fwk.message.deserialize(body);
