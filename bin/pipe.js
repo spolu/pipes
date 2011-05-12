@@ -159,7 +159,7 @@ var pipe = function(spec, my) {
     ctx.multi().on(
       'recv', 
       function(type, body) {
-	ctx.log.out('msg ' + type + ':' + msg);
+	//ctx.log.out('multi ' + type + ': ' + body);
 	if(type === 'msg') {
 	  try {
 	    msg = fwk.message.deserialize(body);
@@ -179,6 +179,7 @@ var pipe = function(spec, my) {
       function() {
 	if(msg) {
 	  try {
+	    ctx.log.out('msg: ' + msg);
 	    if(my.access.isgranted(ctx, msg)) {
 	      my.router.route(
 		ctx, msg, 
