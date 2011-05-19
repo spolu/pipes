@@ -131,7 +131,7 @@ var pipe = function(spec, my) {
     if(ctx.request())
       data += unescape(ctx.request().url);
     ctx.response().writeHead(code, {'Content-Length': data.length,
-				    'Content-Type': "text/html;"});
+				    'Content-Type': "text/html; charset=utf8"});
     ctx.response().write(data);
     ctx.response().end();  
     ctx.finalize();
@@ -186,7 +186,7 @@ var pipe = function(spec, my) {
 		function(reply) {
 		  var body = JSON.stringify(reply.body());
 		  var headers = reply.headers();
-		  headers['Content-Type'] = "text/plain;";
+		  headers['Content-Type'] = "text/plain; charset=utf8";
 		  ctx.response().writeHead(200, headers);
 		  ctx.multi().on('chunk', function(chunk) { ctx.response().write(chunk); });
 		  ctx.multi().send('body', body);
