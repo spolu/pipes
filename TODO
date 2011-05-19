@@ -14,6 +14,7 @@ TODO ctl:
 
 NEXT CHANGELOG:
 
+- BUG: utf-8 charset encoding not set
 - BUG: maxSocket in lib limiting complex interactions
 - BUG: error within callback would not be reported and would crash process
 
