@@ -44,7 +44,7 @@ var pipe = function(spec, my) {
     ctx.request().setEncoding('utf8');
     urlreq = url.parse(ctx.request().url, true);
     ctx.push('cmd:' + urlreq.pathname.substring(1));
-    
+
     /** authentication */
     ctx.authenticate(my.cfg['PIPE_HMAC_KEY']);
     if(ctx.auth().authenticated)
