@@ -148,7 +148,6 @@ var pipe = function(spec, my) {
   
   message = function(ctx, query) {
     var msg;
-    var first = true;
 
     ctx.request().connection.setTimeout(0);
 
