@@ -1,9 +1,8 @@
 TODO lib:
 
-- Max concurrent connection [agent did not arrange things]
-
 TODO bin:
 
+- tinker with continuous messages support & client queues for longlived connections
 - Refer registration by name (in case of a restart id will change but subscription should be resilient)
 - add possibility of error message as reply for full stack error reporting
 - add index.html serving with basic information
@@ -14,9 +13,11 @@ TODO ctl:
 
 NEXT CHANGELOG:
 
+- ENH: Code simplification for 2w, c handling
 - BUG: utf-8 charset encoding not set
-- BUG: maxSocket in lib limiting complex interactions
+- BUG: maxSocket in lib limiting complex interactions (moved maxAgents to 99)
 - BUG: error within callback would not be reported and would crash process
+- [UNRESOLVED] Max concurrent connection [agent did not arrange things] (moved maxAgents to 499)
 
 CHANGELOG v0.1.4:
 

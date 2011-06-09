@@ -148,6 +148,7 @@ var pipe = function(spec, my) {
   
   message = function(ctx, query) {
     var msg;
+    var first = true;
 
     ctx.request().connection.setTimeout(0);
 
@@ -181,24 +182,32 @@ var pipe = function(spec, my) {
 	  try {
 	    ctx.log.out('msg: ' + msg);
 	    if(my.access.isgranted(ctx, msg)) {
-	      my.router.route(
-		ctx, msg, 
-		function(reply) {
-		  var body = JSON.stringify(reply.body());
-		  var headers = reply.headers();
-		  headers['Content-Type'] = "text/plain; charset=utf8";
-		  ctx.response().writeHead(200, headers);
-		  ctx.multi().on('chunk', function(chunk) { ctx.response().write(chunk); });
-		  ctx.multi().send('body', body);
-		  ctx.response().end();
-		  ctx.finalize();	 
-		});
-	      /** timeout 2w, c */
-	      if(msg.type() === '2w' || msg.type() === 'c') {
-		setTimeout(function() {
-			     if(!ctx.finalized())
-			       ctx.error(new Error('message timeout'));
-			   }, my.cfg['PIPE_TIMEOUT']);		
+	      /** route 1w, 2w, c, r */
+	      if (msg.type() === '1w' || msg.type() === '2w' ||
+		  msg.type() === 'c' || msg.type() === 'r') {		
+		my.router.route(
+		  ctx, msg, 
+		  function(reply) {
+		    var body = JSON.stringify(reply.body());
+		    var headers = reply.headers();
+		    headers['Content-Type'] = "text/plain; charset=utf8";
+		    ctx.response().writeHead(200, headers);
+		    ctx.multi().on('chunk', function(chunk) { ctx.response().write(chunk); });
+		    ctx.multi().send('body', body);
+		    ctx.response().end();
+		    ctx.finalize();	 
+		  });
+		/** timeout 2w, c */
+		if(msg.type() === '2w' || msg.type() === 'c') {
+		  setTimeout(function() {
+			       if(!ctx.finalized())
+				 ctx.error(new Error('message timeout'));
+			     }, my.cfg['PIPE_TIMEOUT']);		
+		}
+	      }
+	      else {
+		if(!ctx.finalized())
+		  ctx.error(new Error('unknownd message type to route'));		
 	      }
 	    }
 	    else
@@ -208,7 +217,7 @@ var pipe = function(spec, my) {
 	else 
 	  ctx.error(new Error('No msg specified'));
       });
-
+    
   };
   
 
@@ -226,14 +235,14 @@ var pipe = function(spec, my) {
 	  ctx, id, tag, 
 	  function(msg) {		
 	    if(first) {
-	      ctx.response().writeHead(200, {'Content-Type': 'text/plain;'});
+	      ctx.response().writeHead(200, {'Content-Type': 'text/plain; charset=utf8'});
 	      ctx.multi().on('chunk', function(chunk) { ctx.response().write(chunk); });
 	      first = false;
 	    }
 	    ctx.multi().send('msg', msg.serialize());
 	    ctx.request().connection.setTimeout(0);
 	  });      
-      } else
+      } else 
 	ctx.error(new Error('subscribe: no id specified'));    
     } catch (err) { ctx.error(err, true); }
   };
@@ -266,7 +275,7 @@ var pipe = function(spec, my) {
 	       typeof routerfun === 'function') {
 	      var id = my.router.register(ctx, tag, filterfun, routerfun);
 	      
-	      ctx.response().writeHead(200, {'Content-Type': 'text/plain;'});
+	      ctx.response().writeHead(200, {'Content-Type': 'text/plain; charset=utf8'});
 	      ctx.multi().on('chunk', function(chunk) { ctx.response().write(chunk); });
 	      ctx.multi().send('id', id);
 	      ctx.response().end();
@@ -301,7 +310,7 @@ var pipe = function(spec, my) {
 	  if(id) {
 	    my.router.unregister(ctx, id);
 	    
-	    ctx.response().writeHead(200, {'Content-Type': 'text/plain;'});
+	    ctx.response().writeHead(200, {'Content-Type': 'text/plain; charset=utf8'});
 	    ctx.multi().on('chunk', function(chunk) { ctx.response().write(chunk); });
 	    ctx.multi().send('done');
 	    ctx.response().end();
@@ -337,7 +346,7 @@ var pipe = function(spec, my) {
 	    if(typeof filterfun === 'function') {
 	      var id = my.access.grant(ctx, tag, filterfun);
 	      
-	      ctx.response().writeHead(200, {'Content-Type': 'text/plain;'});
+	      ctx.response().writeHead(200, {'Content-Type': 'text/plain; charset=utf8'});
 	      ctx.multi().on('chunk', function(chunk) { ctx.response().write(chunk); });
 	      ctx.multi().send('id', id);
 	      ctx.response().end();
@@ -372,7 +381,7 @@ var pipe = function(spec, my) {
 	  if(id) {
 	    my.access.revoke(ctx, id);
 	    
-	    ctx.response().writeHead(200, {'Content-Type': 'text/plain;'});
+	    ctx.response().writeHead(200, {'Content-Type': 'text/plain; charset=utf8'});
 	    ctx.multi().on('chunk', function(chunk) { ctx.response().write(chunk); });
 	    ctx.multi().send('done');
 	    ctx.response().end();
@@ -415,7 +424,7 @@ var pipe = function(spec, my) {
 	    }	    
 
 	    var body = JSON.stringify(data);
-	    ctx.response().writeHead(200, {'Content-Type': 'text/plain;'});
+	    ctx.response().writeHead(200, {'Content-Type': 'text/plain; charset=utf8'});
 	    ctx.multi().on('chunk', function(chunk) { ctx.response().write(chunk); });
 	    ctx.multi().send('data', body);
 	    ctx.response().end();
@@ -433,7 +442,7 @@ var pipe = function(spec, my) {
     my.router.shutdown(ctx);
     
     if(ctx.response()) {
-      ctx.response().writeHead(200, {'Content-Type': 'text/plain;'});
+      ctx.response().writeHead(200, {'Content-Type': 'text/plain; charset=utf8'});
       ctx.multi().on('chunk', function(chunk) { ctx.response().write(chunk); });
       ctx.multi().send('done');
       ctx.response().end();
@@ -443,7 +452,7 @@ var pipe = function(spec, my) {
   
   check = function(ctx) {
     if(ctx.response()) {
-      ctx.response().writeHead(200, {'Content-Type': 'text/plain;'});
+      ctx.response().writeHead(200, {'Content-Type': 'text/plain; charset=utf8'});
       ctx.multi().on('chunk', function(chunk) { ctx.response().write(chunk); });
       ctx.multi().send('ok');
       ctx.response().end();

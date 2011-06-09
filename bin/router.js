@@ -131,7 +131,8 @@ var registration = function(spec, my) {
   queue = function(ctx, msg) {    
     my.count++;
     my.queue.push(msg);
-    if(msg.type() === '2w' || msg.type() === 'c') {
+    if(msg.type() === '2w' || 
+       msg.type() === 'c') {
       ctx.on('finalize', function(ctx) {
 	       my.queue.remove(msg);
 	     });     
@@ -197,7 +198,7 @@ var router = function(spec, my) {
   var _super = {};
     
   my.regs = {};
-  my.twoways = {};
+  my.stack = {};
   
   my.cfg = spec.config || cfg.config;
   
@@ -287,15 +288,18 @@ var router = function(spec, my) {
       ack(ctx, msg, cb_);
     }   
     
-    /** twoways handling */
-    else if(msg.type() === '2w') {
-      ctx.log.out('2w ' + msg.toString());
-      my.twoways[msg.tint()] = {'msg': msg, 
-				'cb_': cb_,
-				'ctx': ctx};
+    /** stack handling */
+    else if(msg.type() === '2w' || 
+	    msg.type() === 'c') {
+      ctx.log.out(msg.type() + ' ' + msg.toString());
+      /** if there is no registration for the message target
+       * it will timeout which is ok for 'c' since volume low */
+      my.stack[msg.tint()] = {'msg': msg, 
+			      'cb_': cb_,
+			      'ctx': ctx};
       
       ctx.on('finalize', function(ctx) {
-	       delete my.twoways[msg.tint()];
+	       delete my.stack[msg.tint()];
 	     });    
       
       /** forwarding must be done after registration */
@@ -307,7 +311,7 @@ var router = function(spec, my) {
     
     /** replies handling */
     else if(msg.type() === 'r') {
-      var m = my.twoways[msg.tint()];
+      var m = my.stack[msg.tint()];
       ctx.log.out('r ' + msg.toString());
       if(m) {
 	/** we reply the original 2w message (registration should be removed) */
@@ -317,28 +321,7 @@ var router = function(spec, my) {
 	ctx.error(new Error('r: message already replied or timeouted'));
 	return;            
       }
-    }
-    
-    /** config handling (twoways) */
-    else if(msg.type() === 'c') {
-      ctx.log.out('c ' + msg.toString());
-      /** if there is no registration for the message target
-       * it will timeout which is ok since volume is low
-       */
-      my.twoways[msg.tint()] = {'msg': msg, 
-				'cb_': cb_,
-				'ctx': ctx};
-      
-      ctx.on('finalize', function(ctx) {
-	       delete my.twoways[msg.tint()];
-	     });    
-      
-      /** forwarding must be done after registration */
-      if(!forward(ctx, msg)) {
-	ctx.error(new Error('c: no matching registration'));      
-	return;      
-      }
-    }
+    }    
 
     /** no matching type */
     else {
@@ -408,10 +391,10 @@ var router = function(spec, my) {
       if(my.regs.hasOwnProperty(i))
 	unregister(ctx, i);
     }    
-    for(var j in my.twoways) {
-      if(my.twoways.hasOwnProperty(j)) {
-	if(!my.twoways[j].ctx.finalized())
-	  my.twoways[j].ctx.error(new Error('pipe shutdown'));
+    for(var j in my.stack) {
+      if(my.stack.hasOwnProperty(j)) {
+	if(!my.stack[j].ctx.finalized())
+	  my.stack[j].ctx.error(new Error('pipe shutdown'));
       }
     }
   };
