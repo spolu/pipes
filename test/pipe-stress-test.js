@@ -42,7 +42,7 @@ handler2w = function(err, hdrs, res) {
   if(err)
     console.log(err.stack);
   else {
-    console.log('2w replied:' + res.body);
+    util.debug('2w replied:' + res.body);
     i++;
     if(i < max) send2w(i);    
     else
@@ -54,7 +54,7 @@ handler1w = function(err, hdrs, res) {
   if(err)
     console.log(err.stack);
   else {
-    console.log('1w:' + res.body);
+    console.log('1w replied:' + res.body);
   }
 };
 
@@ -72,7 +72,7 @@ pipe.register('pipe-stress-test', filter, router, function(err, id) {
 	      });
 
 pipe.on('1w', function(id, msg) {
-	  console.log('RECEIVED 1w:' + id + ':' + msg.body());	  
+	  util.debug('RECEIVED 1w:' + id + ':' + msg.body());	  
 	  i++;
 	  if(i < max) send1w(i);	  
 	  else
@@ -80,7 +80,7 @@ pipe.on('1w', function(id, msg) {
 	});
 
 pipe.on('2w', function(id, msg) {
-	  console.log('REPLYING 2w:' + id + ':' + msg.body());	  
+	  util.debug('REPLYING 2w:' + id + ':' + msg.body() + ' - ' + msg.tint());	  
 	  var reply = fwk.message.reply(msg);
 	  reply.setBody(msg.body());
 	  pipe.send(reply, handler1w);
