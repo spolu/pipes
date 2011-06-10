@@ -1,7 +1,7 @@
 var events = require('events');
 var http = require('http');
 var util = require('util');
-var fwk = require('fwk');
+var fwk = require('pipe');
 
 var cfg = require("./config.js");
 

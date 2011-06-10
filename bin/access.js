@@ -1,4 +1,4 @@
-var fwk = require('fwk');
+var fwk = require('pipe');
 var util = require('util');
 
 var config = require("./config.js");

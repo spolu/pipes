@@ -1,4 +1,4 @@
-var fwk = require('fwk');
+var fwk = require('pipe');
 var util = require('util');
 
 var cfg = require("./config.js");
@@ -277,7 +277,7 @@ var router = function(spec, my) {
    * cb_(msg) is called once the message is accepted (1w, r) or replied (2w, c) 
    */
   route = function(ctx, msg, cb_) {
-    ctx.log.out(msg.type() + ' ' + msg.toString());
+    //ctx.log.out(msg.type() + ' ' + msg.toString());
 
     /** oneways handling */
     if(msg.type() === '1w') {
@@ -311,7 +311,6 @@ var router = function(spec, my) {
     /** replies handling */
     else if(msg.type() === 'r') {
       var m = my.twoways[msg.tint()];
-      ctx.log.out('r ' + msg.toString());
       if(m) {
 	/** we reply the original 2w message (registration should be removed) */
 	callback(m.ctx, m.cb_, msg);

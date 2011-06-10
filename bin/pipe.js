@@ -3,7 +3,7 @@
 var http = require('http');
 var url = require('url');
 var util = require('util');
-var fwk = require('fwk');
+var fwk = require('pipe');
 
 var cfg = require("./config.js");
 
@@ -179,7 +179,7 @@ var pipe = function(spec, my) {
       function() {
 	if(msg) {
 	  try {
-	    ctx.log.out('msg: ' + msg);
+	    ctx.log.out('msg: ' + msg.type() + ' ' + msg);
 	    if(my.access.isgranted(ctx, msg)) {
 	      /** route 1w, 2w, c, r */
 	      if (msg.type() === '1w' || msg.type() === '2w' ||

@@ -2,7 +2,7 @@
 
 var util = require('util');
 var fs = require('fs');
-var fwk = require('fwk');
+var fwk = require('pipe');
 
 var cfg = require("./config.js");
 

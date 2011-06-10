@@ -1,5 +1,5 @@
 var util = require('util');
-var fwk = require('fwk');
+var fwk = require('pipe');
 
 var pipe = require('pipe').pipe({});
 
