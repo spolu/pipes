@@ -216,10 +216,8 @@ var pipe = function(spec, my) {
 	} 
 	else 
 	  ctx.error(new Error('No msg specified'));
-      });
-    
-  };
-  
+      });    
+  };  
 
   subscribe = function(ctx, query) {
     try {
