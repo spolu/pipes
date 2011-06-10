@@ -128,14 +128,14 @@ var registration = function(spec, my) {
     return my.router(my.subs, msg);
   };
   
-  queue = function(ctx, msg) {    
+  queue = function(client, msg) {    
     my.count++;
     my.queue.push(msg);
     if(msg.type() === '2w' || 
        msg.type() === 'c') {
-      ctx.on('finalize', function(ctx) {
-	       my.queue.remove(msg);
-	     });     
+      client.on('finalize', function(client) {
+		  my.queue.remove(msg);
+		});     
     }
   };
   
@@ -238,16 +238,16 @@ var router = function(spec, my) {
   var shutdown;
 
   /** Helper function to execute a callback. */
-  callback = function(ctx, cb_, msg) {
-    try{
-      cb_(msg);
+  callback = function(client, msg) {
+    try {
+      client.queue(msg);
     } catch (err) {
-      ctx.error(err, true);
+      client.error(err, true);
     }
   };
 
   /** Helper function to forward a 1w,r or 2w,c message to the registrations */
-  forward = function(ctx, msg) {
+  forward = function(client, msg) {
     var done = false;
     for(var id in my.regs) {      
       if(my.regs.hasOwnProperty(id)) {
@@ -256,11 +256,11 @@ var router = function(spec, my) {
 	  done = true;
 	  var r = reg.router(msg);
 	  if(r.ok) {
-	    reg.queue(ctx, msg);
+	    reg.queue(client, msg);
 	    reg.pump();
 	  }
 	  else
-	    reg.queue(ctx, msg);
+	    reg.queue(client, msg);
 	}	
       }      
     }
@@ -268,43 +268,42 @@ var router = function(spec, my) {
   };
 
   /** Helper function to ack a '1w', 'r' or 'c' messages */
-  ack = function(ctx, msg, cb_) {
+  ack = function(client, msg) {
     var ackmsg = fwk.message.ack(msg);
-    callback(ctx, cb_, ackmsg);
+    callback(client, ackmsg);
   };
   
   /** 
    * Route a msg to matching subs
    * cb_(msg) is called once the message is accepted (1w, r) or replied (2w, c) 
    */
-  route = function(ctx, msg, cb_) {
+  route = function(client, msg) {
     /** oneways handling */
     if(msg.type() === '1w') {
-      if(!forward(ctx, msg)) {
-	ctx.error(new Error('1w: no matching registration'));
+      if(!forward(client, msg)) {
+	client.error(new Error('1w: no matching registration'));
 	return;      
       }
-      ctx.log.out('1w ' + msg.toString());
-      ack(ctx, msg, cb_);
+      ack(client, msg);
     }   
     
     /** stack handling */
     else if(msg.type() === '2w' || 
 	    msg.type() === 'c') {
-      ctx.log.out(msg.type() + ' ' + msg.toString());
       /** if there is no registration for the message target
        * it will timeout which is ok for 'c' since volume low */
-      my.stack[msg.tint()] = {'msg': msg, 
-			      'cb_': cb_,
-			      'ctx': ctx};
-      
-      ctx.on('finalize', function(ctx) {
-	       delete my.stack[msg.tint()];
-	     });    
-      
+      var removal = function() {
+	delete my.stack[msg.tint()];	
+      };
+      client.on('finalize', removal);    
+
+      my.stack[msg.tint()] = { 'msg': msg, 
+			       'client': client,
+			       'removal': removal };
+            
       /** forwarding must be done after registration */
-      if(!forward(ctx, msg)) {
-	ctx.error(new Error('2w: no matching registration'));      
+      if(!forward(client, msg)) {
+	client.error(new Error('2w: no matching registration'));      
 	return;      
       }
     }
@@ -312,20 +311,21 @@ var router = function(spec, my) {
     /** replies handling */
     else if(msg.type() === 'r') {
       var m = my.stack[msg.tint()];
-      ctx.log.out('r ' + msg.toString());
       if(m) {
 	/** we reply the original 2w message (registration should be removed) */
-	callback(m.ctx, m.cb_, msg);
-	ack(ctx, msg, cb_);
+	callback(m.client, msg);
+	m.client.removeListener('finalize', m.removal);
+	m.removal();
+	ack(client, msg);
       } else {
-	ctx.error(new Error('r: message already replied or timeouted'));
+	client.error(new Error('r: message already replied or timeouted'));
 	return;            
       }
     }    
 
     /** no matching type */
     else {
-      ctx.error(new Error('unknown msg type: ' + msg.type()));
+      client.error(new Error('unknown msg type: ' + msg.type()));
       return;            
     }
   };
@@ -393,8 +393,8 @@ var router = function(spec, my) {
     }    
     for(var j in my.stack) {
       if(my.stack.hasOwnProperty(j)) {
-	if(!my.stack[j].ctx.finalized())
-	  my.stack[j].ctx.error(new Error('pipe shutdown'));
+	if(!my.stack[j].client.finalized())
+	  my.stack[j].client.error(new Error('pipe shutdown'));
       }
     }
   };

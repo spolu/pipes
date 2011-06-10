@@ -28,11 +28,13 @@ var pipe = function(spec, my) {
 
   my.router = require("./router.js").router({ config: my.cfg });
   my.access = require("./access.js").access({ config: my.cfg });
+  my.pool = require("./pool.js").pool({ config: my.cfg, 
+					key: my.cfg['PIPE_HMAC_KEY'] });
   
   var that = {};
   
   var handler, error, unauthorized, notfound;
-  var message, subscribe, register, unregister, grant, revoke, list;
+  var message, stream, subscribe, register, unregister, grant, revoke, list;
   var shutdown, check;
   
   handler = function(req, res) {
@@ -64,11 +66,16 @@ var pipe = function(spec, my) {
       
       /** PUBLIC FUNCTIONS */    
       
-      /** message 1-way/2-way */
+      /** message 1w,2w,c,r */
     case '/msg':    
       message(ctx, urlreq.query);
       break;    
       
+      /** connect 1w,2w,cw,c,r */
+    case '/str':
+      stream(ctx, urlreq.query);
+      break;
+
       /** ADMIN FUNCTIONS */
       
     /** subscription */
@@ -147,30 +154,64 @@ var pipe = function(spec, my) {
 
   
   message = function(ctx, query) {
-    var msg;
+    var c, msg, stream = false;
 
     ctx.request().connection.setTimeout(0);
-
     //ctx.log.debug('query: ' + util.inspect(query));
     
+    if(!query || !query.key) {
+      c = my.pool.create();
+      c.connect(ctx, function(reply) {
+		  var body = JSON.stringify(reply.body());
+		  var headers = reply.headers();
+		  headers['Content-Type'] = "text/plain; charset=utf8";
+		  ctx.response().writeHead(200, headers);
+		  ctx.multi().on('chunk', function(chunk) { ctx.response().write(chunk); });
+		  ctx.multi().send('body', body);
+		  
+		  ctx.response().end();
+		  ctx.finalize();	 	
+		  c.finalize();
+		});
+
+      // 2w, c timeouts are handled by pool clients timeouts
+      // (ctx kept in memory the whole duration but that's ok)
+      c.on('finalize', function() {
+	     if(!ctx.finalized())
+	       ctx.error(new Error('pool: client timeout ' + c.key()));
+	   });    
+    }
+    else {      
+      stream = true;
+      c = my.pool.get(query.key);
+      if(!c) {
+	if(!ctx.finalized())
+	  ctx.error(new Error('pool: unknown client ' + query.key));
+	return;
+      }
+    }
+
     ctx.request().on("data", function(chunk) { ctx.multi().recv(chunk); });
     ctx.request().on("end", function() { ctx.multi().end(); });
-    
+
     ctx.multi().on(
       'recv', 
       function(type, body) {
-	//ctx.log.out('multi ' + type + ': ' + body);
+	//util.debug('multi ' + type + ': ' + body + ' ' + ctx.tint());
 	if(type === 'msg') {
 	  try {
 	    msg = fwk.message.deserialize(body);
-	    /** cookie forwarding */
+	    /** cookie & tint forwarding */
 	    msg.setCookies(ctx.cookies());
-	    /** tint forwarding */
-	    if(msg.tint())
-	      ctx.setTint(msg.tint());
-	    else
-	      msg.setTint(ctx.tint());		       
+            if(msg.tint())
+              ctx.setTint(msg.tint());
+            else
+              msg.setTint(ctx.tint());
 	  } catch (err) { ctx.error(err); }		     
+	}
+	else {
+	  if(!ctx.finalized())
+	    ctx.error(new Error('unknown or repetitive message to route'));			  
 	}
       });
     
@@ -179,46 +220,89 @@ var pipe = function(spec, my) {
       function() {
 	if(msg) {
 	  try {
-	    ctx.log.out('msg: ' + msg);
+	    ctx.log.out('msg: ' + msg.type() + ' ' + msg + ' ' + msg.tint());	    
 	    if(my.access.isgranted(ctx, msg)) {
 	      /** route 1w, 2w, c, r */
 	      if (msg.type() === '1w' || msg.type() === '2w' ||
 		  msg.type() === 'c' || msg.type() === 'r') {		
-		my.router.route(
-		  ctx, msg, 
-		  function(reply) {
-		    var body = JSON.stringify(reply.body());
-		    var headers = reply.headers();
-		    headers['Content-Type'] = "text/plain; charset=utf8";
-		    ctx.response().writeHead(200, headers);
-		    ctx.multi().on('chunk', function(chunk) { ctx.response().write(chunk); });
-		    ctx.multi().send('body', body);
-		    ctx.response().end();
-		    ctx.finalize();	 
-		  });
-		/** timeout 2w, c */
-		if(msg.type() === '2w' || msg.type() === 'c') {
-		  setTimeout(function() {
-			       if(!ctx.finalized())
-				 ctx.error(new Error('message timeout'));
-			     }, my.cfg['PIPE_TIMEOUT']);		
+		my.router.route(c, msg);
+
+		/* in case this is a streamed msg
+		 * we simply ack */
+		if(stream) {
+		  var ackmsg = fwk.message.ack(msg);
+		  var body = JSON.stringify(ackmsg.body());
+		  var headers = ackmsg.headers();
+		  headers['Content-Type'] = "text/plain; charset=utf8";
+		  ctx.response().writeHead(200, headers);
+		  ctx.multi().on('chunk', function(chunk) { ctx.response().write(chunk); });
+		  ctx.multi().send('body', body);
+		  
+		  ctx.response().end();
+		  ctx.finalize();	 	
 		}
 	      }
 	      else {
 		if(!ctx.finalized())
-		  ctx.error(new Error('unknownd message type to route'));		
+		  ctx.error(new Error('invalid message type to route: ' + msg.type()));		
 	      }
 	    }
 	    else
 	      unauthorized(ctx);
-	  } catch (err) { ctx.error(err, true); }
-	} 
-	else 
-	  ctx.error(new Error('No msg specified'));
+	  } catch (err) { ctx.error(err); }		     
+	}
+	else {
+	  ctx.error(new Error('No valid msg received'));
+	}
       });
-    
   };
   
+  stream = function(ctx, query) {
+    var c, first = true;
+    ctx.request().connection.setTimeout(0);
+
+    if(!query || !query.key) {
+      //create and reply
+      c = my.pool.create();
+      ctx.response().writeHead(200, {'Content-Type': 'text/plain; charset=utf8'});
+      ctx.multi().on('chunk', function(chunk) { ctx.response().write(chunk); });
+      ctx.multi().send('key', key);
+      first = false;
+    }
+    else {      
+      c = my.pool.get(query.key);
+      if(!c) {
+	if(!ctx.finalized())
+	  ctx.error(new Error('pool: unknown client ' + query.key));
+	return;
+      }
+    }
+        
+    //ctx.log.debug('query: ' + util.inspect(query));
+    
+    c.connect(ctx, function(reply) {
+		if(fisrt) {
+		  // first reply only set headers
+		  var headers = reply.headers();
+		  headers['Content-Type'] = "text/plain; charset=utf8";
+		  ctx.response().writeHead(200, headers);
+		  ctx.multi().on('chunk', function(chunk) { ctx.response().write(chunk); });
+		  first = false;
+		}
+		var body = JSON.stringify(reply.body());
+		ctx.multi().send('body', body);
+		ctx.request().connection.setTimeout(0);
+	      });
+    // 2w, c timeouts are handled by pool clients timeouts
+    // (ctx kept in memory the whole duration but that's ok)
+    c.on('finalize', function() {
+	   if(!ctx.finalized())
+	     ctx.error(new Error('pool: client finalize ' + c.key()));
+	 });
+   
+    ctx.request().on("data", function(chunk) { /* ingored */ });
+    ctx.request().on("end", function() { /* nothing to do */ });
+  };
 
   subscribe = function(ctx, query) {
     try {
