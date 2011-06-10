@@ -19,14 +19,14 @@
 // OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
 // USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-var fwk = require('pipe');
+var fwk = require('pipes');
 
 var config = fwk.baseConfig();
 
-config['PIPE_PORT'] = 22222;
-config['PIPE_HMAC_KEY'] = 'INSECURE';
-config['PIPE_ADMIN_USER'] = 'admin';
-config['PIPE_TIMEOUT'] = 10000;
+config['PIPES_PORT'] = 22222;
+config['PIPES_HMAC_KEY'] = 'INSECURE';
+config['PIPES_ADMIN_USER'] = 'admin';
+config['PIPES_TIMEOUT'] = 10000;
 
 /** export merged configuration */
 exports.config = config;

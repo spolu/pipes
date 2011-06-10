@@ -19,7 +19,7 @@
 // OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
 // USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-var fwk = require('pipe');
+var fwk = require('pipes');
 var util = require('util');
 
 var config = require("./config.js");

@@ -2,13 +2,13 @@
 
 killall `which node`
 
-echo 'Starting pipe...'
-pipe --TINT_NAME=pipe --DEBUG=1 &
+echo 'Starting pipes...'
+pipes --TINT_NAME=pipes --DEBUG=1 &
 sleep 1
 echo 'DONE'
 
-pipectl grant biz/auth-filter.js TEST
-pipereg=`pipectl register biz/reg-filter.js biz/reg-router.js TEST-REG`
-echo "pipe registration: $pipereg"
+pipesctl grant biz/auth-filter.js TEST
+pipesreg=`pipesctl register biz/reg-filter.js biz/reg-router.js TEST-REG`
+echo "pipes registration: $pipesreg"
 
-#node pipe-listen $pipereg --DEBUG=1 
+#node pipes-listen $pipesreg --DEBUG=1 

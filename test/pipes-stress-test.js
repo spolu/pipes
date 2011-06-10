@@ -1,7 +1,7 @@
 var util = require('util');
-var fwk = require('pipe');
+var fwk = require('pipes');
 
-var pipe = require('pipe').pipe({});
+var pipes = require('pipes').pipes({});
 
 var filter = function(msg) {
   return true;
@@ -13,7 +13,7 @@ var router = function(subs, msg) {
   return {ok: false};
 };
 
-var p = pipe;
+var p = pipes;
 var rid;
 var i = 0;
 var max = 100000;
@@ -26,7 +26,7 @@ send1w = function(body) {
     .setSubject('TEST-' + body)
     .setBody(body);
   console.log('sending 1w:' + body);
-  pipe.send(msg, handler1w);		    
+  pipes.send(msg, handler1w);		    
 };
 
 send2w = function(body) {
@@ -35,7 +35,7 @@ send2w = function(body) {
     .setSubject('TEST-'+body)
     .setBody(body);
   console.log('sending 2w:' + body);
-  pipe.send(msg, handler2w);		    
+  pipes.send(msg, handler2w);		    
 };
 
 handler2w = function(err, hdrs, res) {
@@ -58,20 +58,20 @@ handler1w = function(err, hdrs, res) {
   }
 };
 
-pipe.register('pipe-stress-test', filter, router, function(err, id) {
+pipes.register('pipes-stress-test', filter, router, function(err, id) {
 		rid = id;
 		if(err)
 		  console.log(err.message);
 		else {
 		  console.log('id: ' + id);	  
-		  pipe.subscribe(id, 'test');
+		  pipes.subscribe(id, 'test');
 		  send2w(i);
 		  i++;
 		  send1w(i);
 		}
 	      });
 
-pipe.on('1w', function(id, msg) {
+pipes.on('1w', function(id, msg) {
 	  util.debug('RECEIVED 1w:' + id + ':' + msg.body());	  
 	  i++;
 	  if(i < max) send1w(i);	  
@@ -79,18 +79,18 @@ pipe.on('1w', function(id, msg) {
 	    process.exit();
 	});
 
-pipe.on('2w', function(id, msg) {
+pipes.on('2w', function(id, msg) {
 	  util.debug('REPLYING 2w:' + id + ':' + msg.body() + ' - ' + msg.tint());	  
 	  var reply = fwk.message.reply(msg);
 	  reply.setBody(msg.body());
-	  pipe.send(reply, handler1w);
+	  pipes.send(reply, handler1w);
 	});
 
-pipe.on('fatal', function(err) {
+pipes.on('fatal', function(err) {
 	  console.log('FATAL!');
 	});
 
-pipe.on('error', function(err) {
+pipes.on('error', function(err) {
 	  if(err)
-	    console.log('pipe-error:' + err.stack);
+	    console.log('pipes-error:' + err.stack);
 	});

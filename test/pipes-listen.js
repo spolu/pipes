@@ -1,22 +1,22 @@
 var util = require('util');
-var fwk = require('pipe');
+var fwk = require('pipes');
 
-var pipe = require('pipe').pipe({});
+var pipes = require('pipes').pipes({});
 
 if(process.argv.length < 3) {
-  console.log('node pipe-listen.js regid');
+  console.log('node pipes-listen.js regid');
 }
 var regid = process.argv[2];
 
-pipe.on('1w', function(id, msg) {
+pipes.on('1w', function(id, msg) {
 	  console.log('RECEIVED 1w:' + id + ':' + msg.tint() + ' ' + msg.subject() + " - " + msg.body());	  
 	});
 
-pipe.on('2w', function(id, msg) {
+pipes.on('2w', function(id, msg) {
 	  console.log('REPLYING 2w:' + id + ':' + msg.body());	  
 	  var reply = fwk.message.reply(msg);
 	  reply.setBody(msg.body());
-	  pipe.send(reply, function(err, hdrs, res) {
+	  pipes.send(reply, function(err, hdrs, res) {
 		      if(err)
 			console.log(err.stack);
 		      else {
@@ -25,29 +25,29 @@ pipe.on('2w', function(id, msg) {
 		    });
 	});
 
-pipe.on('error', function(err, id) {
+pipes.on('error', function(err, id) {
 	  if(err)
 	    console.log(id + ": error " + err.message);	  
 	});
 
-pipe.on('stop', function(id) {
+pipes.on('stop', function(id) {
 	  console.log(id + ': stop');
 	});
 
-pipe.on('connect', function(id) {
+pipes.on('connect', function(id) {
 	  console.log(id + ': connect');
 	});
 
-pipe.on('disconnect', function(id) {
+pipes.on('disconnect', function(id) {
 	  console.log(id + ': disconnect');
 	});
 
-pipe.on('removed', function(id) {
+pipes.on('removed', function(id) {
 	  console.log(id + ': removed');
 	});
 
-pipe.on('added', function(id) {
+pipes.on('added', function(id) {
 	  console.log(id + ': added');
 	});
 
-pipe.subscribe(regid, 'pipe-simple');
+pipes.subscribe(regid, 'pipes-simple');

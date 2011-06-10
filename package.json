@@ -1,10 +1,18 @@
 {
-  "name": "pipe",
-  "description": "Pipe Messaging Library and Binary",
+  "name": "pipes",
   "version": "0.3.0",
-  "author": "Stanislas Polu <stan@bipsly.com>",
-  "keywords": ["messaging", "library", "binary"],
-  "main" : "./lib/pipe",
-  "bin" : { "pipe" : "./bin/pipe.js", "pipectl" : "./bin/pipectl.js" }, 
-  "engines": { "node": ">=0.4.8" }
+  "description": "A dead simple message queue for node.js",
+  "keywords": ["queue", "messaging", "dead", "simple"],
+  "homepage": "https://github.com/spolu/pipes",
+  "author": { "name": "Stanislas Polu",
+              "email": "stan@bipsly.com",
+	      "url": "http://twitter.com/spolu" },
+  "repository" :    { "type" :  "git",
+                      "url" :   "http://github.com/spolu/pipes.git" },
+  "os" :            [ "linux",
+                      "darwin",
+                      "freebsd" ],
+  "main" : "./lib/pipes",
+  "bin" : { "pipes" : "./bin/pipes.js", "pipesctl" : "./bin/pipesctl.js" }, 
+  "engines" : { "node" : ">=0.4.0" }
 }

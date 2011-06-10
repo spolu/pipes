@@ -24,18 +24,18 @@
 var http = require('http');
 var url = require('url');
 var util = require('util');
-var fwk = require('pipe');
+var fwk = require('pipes');
 
 var cfg = require("./config.js");
 
 /** 
- * The Pipe Server Object
+ * The Pipes Server Object
  * 
  * @extends {}
  * 
  * @param spec {port}
  */ 
-var pipe = function(spec, my) {
+var pipes = function(spec, my) {
   my = my || {};
   var _super = {};
 
@@ -43,7 +43,7 @@ var pipe = function(spec, my) {
   my.cfg = cfg.config;
   my.logger = fwk.logger();
   
-  my.port = spec.port || my.cfg['PIPE_PORT'];
+  my.port = spec.port || my.cfg['PIPES_PORT'];
   
   my.server = http.createServer();
 
@@ -57,7 +57,7 @@ var pipe = function(spec, my) {
   var shutdown, check;
   
   handler = function(req, res) {
-    //util.debug('PIPE HANDLER');    
+    //util.debug('PIPES HANDLER');    
     var ctx = fwk.context({ request: req,
 			    response: res,
 			    logger: my.logger,
@@ -67,7 +67,7 @@ var pipe = function(spec, my) {
     ctx.push('cmd:' + urlreq.pathname.substring(1));
 
     /** authentication */
-    ctx.authenticate(my.cfg['PIPE_HMAC_KEY']);
+    ctx.authenticate(my.cfg['PIPES_HMAC_KEY']);
     if(ctx.auth().authenticated)
       ctx.push('user:' + ctx.auth().user);
     else
@@ -94,45 +94,45 @@ var pipe = function(spec, my) {
       
     /** subscription */
     case '/sub':
-      if(user === my.cfg['PIPE_ADMIN_USER'] && auth)
+      if(user === my.cfg['PIPES_ADMIN_USER'] && auth)
 	subscribe(ctx, urlreq.query);
       else notfound(ctx);
       break;
       
       /** registration */
     case '/reg':
-      if(user === my.cfg['PIPE_ADMIN_USER'] && auth)
+      if(user === my.cfg['PIPES_ADMIN_USER'] && auth)
 	register(ctx, urlreq.query);
       else notfound(ctx);
       break;
     case '/unr':
-      if(user === my.cfg['PIPE_ADMIN_USER'] && auth)
+      if(user === my.cfg['PIPES_ADMIN_USER'] && auth)
 	unregister(ctx, urlreq.query);
       else notfound(ctx);
       break;
       
       /** grant */
     case '/grt':
-      if(user === my.cfg['PIPE_ADMIN_USER'] && auth)
+      if(user === my.cfg['PIPES_ADMIN_USER'] && auth)
 	grant(ctx, urlreq.query);
       else notfound(ctx);
       break;
     case '/rvk':
-      if(user === my.cfg['PIPE_ADMIN_USER'] && auth)
+      if(user === my.cfg['PIPES_ADMIN_USER'] && auth)
 	revoke(ctx, urlreq.query);
       else notfound(ctx);
       break;
       
       /** list */
     case '/lst':
-      if(user === my.cfg['PIPE_ADMIN_USER'] && auth)
+      if(user === my.cfg['PIPES_ADMIN_USER'] && auth)
 	list(ctx, urlreq.query);
       else notfound(ctx);
       break;
       
       /** shutdown */
     case '/sht':
-      if(user === my.cfg['PIPE_ADMIN_USER'] && auth)
+      if(user === my.cfg['PIPES_ADMIN_USER'] && auth)
 	shutdown(ctx);
       else notfound(ctx);
       break;
@@ -222,7 +222,7 @@ var pipe = function(spec, my) {
 		  setTimeout(function() {
 			       if(!ctx.finalized())
 				 ctx.error(new Error('message timeout'));
-			     }, my.cfg['PIPE_TIMEOUT']);		
+			     }, my.cfg['PIPES_TIMEOUT']);		
 		}
 	      }
 	      else {
@@ -491,5 +491,5 @@ var pipe = function(spec, my) {
 };
 
 /** main */
-var p = pipe({});
+var p = pipes({});
 

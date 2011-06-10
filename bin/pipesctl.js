@@ -23,18 +23,18 @@
 
 var util = require('util');
 var fs = require('fs');
-var fwk = require('pipe');
+var fwk = require('pipes');
 
 var cfg = require("./config.js");
 
 /** 
- * The Pipe Control Object
+ * The Pipes Control Object
  * 
  * @extends {}
  * 
  * @param spec {server, port, key, user}
  */ 
-var pipectl = function(spec, my) {
+var pipesctl = function(spec, my) {
   my = my || {};
   var _super = {};
 
@@ -43,16 +43,16 @@ var pipectl = function(spec, my) {
   my.logger = fwk.logger();
   
   
-  my.server = spec.server || my.cfg['PIPE_SERVER'];
-  my.port = spec.port || my.cfg['PIPE_PORT'];
+  my.server = spec.server || my.cfg['PIPES_SERVER'];
+  my.port = spec.port || my.cfg['PIPES_PORT'];
 
-  my.key = spec.key || my.cfg['PIPE_HMAC_KEY'];
-  my.user = spec.user || my.cfg['PIPE_ADMIN_USER'];
+  my.key = spec.key || my.cfg['PIPES_HMAC_KEY'];
+  my.user = spec.user || my.cfg['PIPES_ADMIN_USER'];
   
-  my.pipe = require('pipe').pipe({ server: my.server,
-				   port: my.port,
-				   key: my.key,
-				   user: my.user });
+  my.pipes = require('pipes').pipes({ server: my.server,
+				      port: my.port,
+				      key: my.key,
+				      user: my.user });
   
   var that = {};
   
@@ -65,32 +65,32 @@ var pipectl = function(spec, my) {
     switch(cmd) {
 
     case 'register':
-      console.log('Usage: pipectl register <filter.js> <router.js> [tag]');
+      console.log('Usage: pipesctl register <filter.js> <router.js> [tag]');
       console.log('');
       break;
       
     case 'unregister':
-      console.log('Usage: pipectl unregister <id>');
+      console.log('Usage: pipesctl unregister <id>');
       console.log('');
       break;
       
     case 'grant':
-      console.log('Usage: pipectl grant <filter.js> [tag]');
+      console.log('Usage: pipesctl grant <filter.js> [tag]');
       console.log('');
       break;
       
     case 'revoke':
-      console.log('Usage: pipectl revoke <id>');
+      console.log('Usage: pipesctl revoke <id>');
       console.log('');
       break;
       
     case 'list':
-      console.log('Usage: pipectl list <reg|auth> [id]');
+      console.log('Usage: pipesctl list <reg|auth> [id]');
       console.log('');
       break;
 
     case 'shutdown':
-      console.log('Usage: pipectl shutdown');
+      console.log('Usage: pipesctl shutdown');
       console.log('');
       break;
       
@@ -100,7 +100,7 @@ var pipectl = function(spec, my) {
   };
   
   usage = function() {
-    console.log('Usage: pipectl <command>');
+    console.log('Usage: pipesctl <command>');
     console.log('');
     console.log('<comand> is one of:');
     console.log('   register, unregister, grant, revoke');
@@ -108,7 +108,7 @@ var pipectl = function(spec, my) {
     console.log('');
     console.log('Config values can be specified in the ENV or');
     console.log('on the command line using:');
-    console.log('  pipectl <command> --KEY=VALUE');
+    console.log('  pipesctl <command> --KEY=VALUE');
     console.log('');
   };
 
@@ -206,7 +206,7 @@ var pipectl = function(spec, my) {
 
     done = function() {
       if(filter && router) {
-	my.pipe.register(
+	my.pipes.register(
 	  tag, filter, router, 
 	  function(err, id) {
 	    if(err) {
@@ -221,7 +221,7 @@ var pipectl = function(spec, my) {
   
 
   unregister = function(id) {
-    my.pipe.unregister(
+    my.pipes.unregister(
       id, 
       function(err) {
 	if(err) {
@@ -240,7 +240,7 @@ var pipectl = function(spec, my) {
 		     process.exit();
 		   }
 		   var filter = data;
-		   my.pipe.grant(
+		   my.pipes.grant(
 		     tag, filter, 
 		     function(err, id) {
 		       if(err) {
@@ -254,7 +254,7 @@ var pipectl = function(spec, my) {
   
 
   revoke = function(id) {
-    my.pipe.revoke(
+    my.pipes.revoke(
       id, 
       function(err) {
 	if(err) {
@@ -308,7 +308,7 @@ var pipectl = function(spec, my) {
       return line;
     };
 
-    my.pipe.list(
+    my.pipes.list(
       kind, id, 
       function(err, data) {
 	if(err) {
@@ -359,7 +359,7 @@ var pipectl = function(spec, my) {
   };    
   
   shutdown = function(id) {
-    my.pipe.shutdown(
+    my.pipes.shutdown(
       function(err) {
 	if(err) {
 	  console.log(err.stack);
@@ -375,4 +375,4 @@ var pipectl = function(spec, my) {
 };
 
 /** main */
-pipectl({}).main();
+pipesctl({}).main();

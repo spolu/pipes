@@ -19,7 +19,7 @@
 // OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
 // USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-var fwk = require('pipe');
+var fwk = require('pipes');
 var util = require('util');
 
 var cfg = require("./config.js");
@@ -413,7 +413,7 @@ var router = function(spec, my) {
     for(var j in my.twoways) {
       if(my.twoways.hasOwnProperty(j)) {
 	if(!my.twoways[j].ctx.finalized())
-	  my.twoways[j].ctx.error(new Error('pipe shutdown'));
+	  my.twoways[j].ctx.error(new Error('pipes shutdown'));
       }
     }
   };

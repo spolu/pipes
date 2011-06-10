@@ -1,7 +1,7 @@
 var events = require('events');
 var http = require('http');
 var util = require('util');
-var fwk = require('pipe');
+var fwk = require('pipes');
 
 var cfg = require("./config.js");
 
@@ -13,11 +13,11 @@ var malformed = function(spec, my) {
   fwk.populateConfig(cfg.config);  
   my.cfg = cfg.config;
   
-  my.server = spec.server || my.cfg['PIPE_SERVER'];
-  my.port = spec.port || my.cfg['PIPE_PORT'];
+  my.server = spec.server || my.cfg['PIPES_SERVER'];
+  my.port = spec.port || my.cfg['PIPES_PORT'];
 
-  my.key = spec.key || my.cfg['PIPE_HMAC_KEY'];
-  my.user = spec.user || my.cfg['PIPE_ADMIN_USER'];
+  my.key = spec.key || my.cfg['PIPES_HMAC_KEY'];
+  my.user = spec.user || my.cfg['PIPES_ADMIN_USER'];
   my.expiry = function() { 
     var d = new Date();
     d.setFullYear(d.getFullYear() + 1);
