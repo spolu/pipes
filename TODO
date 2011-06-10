@@ -2,7 +2,6 @@ TODO lib:
 
 TODO bin:
 
-- tinker with continuous messages support & client queues for longlived connections
 - Refer registration by name (in case of a restart id will change but subscription should be resilient)
 - add possibility of error message as reply for full stack error reporting
 - add index.html serving with basic information
@@ -18,6 +17,8 @@ NEXT CHANGELOG:
 - BUG: maxSocket in lib limiting complex interactions (moved maxAgents to 99)
 - BUG: error within callback would not be reported and would crash process
 - [UNRESOLVED] Max concurrent connection [agent did not arrange things] (moved maxAgents to 499)
+- [REPORTED] tinkered with continuous messages support & client queues for longlived connections
+  long poll and persistent 1.1 connection is GOOD and simple
 
 CHANGELOG v0.1.4:
 
