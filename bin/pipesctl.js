@@ -49,10 +49,10 @@ var pipesctl = function(spec, my) {
   my.key = spec.key || my.cfg['PIPES_HMAC_KEY'];
   my.user = spec.user || my.cfg['PIPES_ADMIN_USER'];
   
-  my.pipes = require('pipes').pipes({ server: my.server,
-				      port: my.port,
-				      key: my.key,
-				      user: my.user });
+  my.pipe = require('pipes').pipe({ server: my.server,
+				    port: my.port,
+				    key: my.key,
+				    user: my.user });
   
   var that = {};
   
@@ -206,7 +206,7 @@ var pipesctl = function(spec, my) {
 
     done = function() {
       if(filter && router) {
-	my.pipes.register(
+	my.pipe.register(
 	  tag, filter, router, 
 	  function(err, id) {
 	    if(err) {
@@ -221,7 +221,7 @@ var pipesctl = function(spec, my) {
   
 
   unregister = function(id) {
-    my.pipes.unregister(
+    my.pipe.unregister(
       id, 
       function(err) {
 	if(err) {
@@ -240,7 +240,7 @@ var pipesctl = function(spec, my) {
 		     process.exit();
 		   }
 		   var filter = data;
-		   my.pipes.grant(
+		   my.pipe.grant(
 		     tag, filter, 
 		     function(err, id) {
 		       if(err) {
@@ -254,7 +254,7 @@ var pipesctl = function(spec, my) {
   
 
   revoke = function(id) {
-    my.pipes.revoke(
+    my.pipe.revoke(
       id, 
       function(err) {
 	if(err) {
@@ -308,7 +308,7 @@ var pipesctl = function(spec, my) {
       return line;
     };
 
-    my.pipes.list(
+    my.pipe.list(
       kind, id, 
       function(err, data) {
 	if(err) {
@@ -359,7 +359,7 @@ var pipesctl = function(spec, my) {
   };    
   
   shutdown = function(id) {
-    my.pipes.shutdown(
+    my.pipe.shutdown(
       function(err) {
 	if(err) {
 	  console.log(err.stack);

@@ -1,7 +1,7 @@
 var util = require('util');
 var fwk = require('pipes');
 
-var pipes = require('pipes').pipes({});
+var pipe = require('pipes').pipe({});
 
 var filter = function(msg) {
   return true;
@@ -13,7 +13,7 @@ var router = function(subs, msg) {
   return {ok: false};
 };
 
-var p = pipes;
+var p = pipe;
 var rid;
 var i = 0;
 var max = 100000;
@@ -26,7 +26,7 @@ send1w = function(body) {
     .setSubject('TEST-' + body)
     .setBody(body);
   console.log('sending 1w:' + body);
-  pipes.send(msg, handler1w);		    
+  pipe.send(msg, handler1w);		    
 };
 
 send2w = function(body) {
@@ -35,7 +35,7 @@ send2w = function(body) {
     .setSubject('TEST-'+body)
     .setBody(body);
   console.log('sending 2w:' + body);
-  pipes.send(msg, handler2w);		    
+  pipe.send(msg, handler2w);		    
 };
 
 handler2w = function(err, hdrs, res) {
@@ -58,20 +58,20 @@ handler1w = function(err, hdrs, res) {
   }
 };
 
-pipes.register('pipes-stress-test', filter, router, function(err, id) {
+pipe.register('pipes-stress-test', filter, router, function(err, id) {
 		rid = id;
 		if(err)
 		  console.log(err.message);
 		else {
 		  console.log('id: ' + id);	  
-		  pipes.subscribe(id, 'test');
+		  pipe.subscribe(id, 'test');
 		  send2w(i);
 		  i++;
 		  send1w(i);
 		}
 	      });
 
-pipes.on('1w', function(id, msg) {
+pipe.on('1w', function(id, msg) {
 	  util.debug('RECEIVED 1w:' + id + ':' + msg.body());	  
 	  i++;
 	  if(i < max) send1w(i);	  
@@ -79,18 +79,18 @@ pipes.on('1w', function(id, msg) {
 	    process.exit();
 	});
 
-pipes.on('2w', function(id, msg) {
+pipe.on('2w', function(id, msg) {
 	  util.debug('REPLYING 2w:' + id + ':' + msg.body() + ' - ' + msg.tint());	  
 	  var reply = fwk.message.reply(msg);
 	  reply.setBody(msg.body());
-	  pipes.send(reply, handler1w);
+	  pipe.send(reply, handler1w);
 	});
 
-pipes.on('fatal', function(err) {
+pipe.on('fatal', function(err) {
 	  console.log('FATAL!');
 	});
 
-pipes.on('error', function(err) {
+pipe.on('error', function(err) {
 	  if(err)
 	    console.log('pipes-error:' + err.stack);
 	});

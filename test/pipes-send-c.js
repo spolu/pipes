@@ -1,7 +1,7 @@
 var util = require('util');
 var fwk = require('pipes');
 
-var pipes = require('pipes').pipes({});
+var pipe = require('pipes').pipe({});
 
 if(process.argv.length < 4) {
   console.log('node pipes-send.js subject target [count]');
@@ -19,7 +19,7 @@ for(var i = 0; i < count; i ++) {
     .setSubject(subject)
     .setBody(i)
     .addTarget(target);  
-  pipes.send(msg, function(err, hdr, res) {
+  pipe.send(msg, function(err, hdr, res) {
 	      if(err)
 		console.log(err.stack);
 	      else {
