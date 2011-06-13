@@ -469,6 +469,7 @@ var pipes = function(spec, my) {
   };  
   
   check = function(ctx) {
+    ctx.log.out('chk');
     if(ctx.response()) {
       ctx.response().writeHead(200, {'Content-Type': 'text/plain; charset=utf8'});
       ctx.multi().on('chunk', function(chunk) { ctx.response().write(chunk); });
