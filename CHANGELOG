@@ -12,7 +12,12 @@ TODO bin:
 TODO ctl:
 
 
-NEXT CHANGELOG:
+CHANGELOG next
+
+
+CHANGELOG v0.3.2
+
+- added /subhub/**** that generates SUB:**** 1w/2w msgs for PubSubHub compatibility
 
 CHANGELOG v0.3.0
 
@@ -23,7 +28,6 @@ CHANGELOG v0.3.0
 - [UNRESOLVED] Max concurrent connection [agent did not arrange things] (moved maxAgents to 499)
 - [] tinkered with continuous messages support & client queues for longlived connections
   long poll and persistent 1.1 connection is GOOD and simple
-
 
 CHANGELOG v0.1.4:
 

@@ -53,8 +53,9 @@ var pipes = function(spec, my) {
   var that = {};
   
   var handler, error, unauthorized, notfound;
-  var message, subscribe, register, unregister, grant, revoke, list;
-  var shutdown, check;
+  var message, check, pubsubhub;
+  var subscribe, register, unregister, grant, revoke, list;
+  var shutdown;
   
   handler = function(req, res) {
     //util.debug('PIPES HANDLER');    
@@ -81,7 +82,11 @@ var pipes = function(spec, my) {
 	     error(ctx, 500, err.message);
 	   });
     
-    switch(urlreq.pathname) {
+    var cmd = '/' + urlreq.pathname.split('/')[1];
+
+    util.debug('CMD: ' + cmd);
+
+    switch(cmd) {
       
       /** PUBLIC FUNCTIONS */    
       
@@ -89,6 +94,17 @@ var pipes = function(spec, my) {
     case '/msg':    
       message(ctx, urlreq.query);
       break;    
+
+      /** pubsubhub sub support */
+    case '/subhub':
+      pubsubhub(ctx, urlreq.pathname, urlreq.query);
+      break;
+      
+      /** monitoring check */
+    case '/chk':
+      check(ctx);
+      break;
+      
       
       /** ADMIN FUNCTIONS */
       
@@ -137,11 +153,6 @@ var pipes = function(spec, my) {
       else notfound(ctx);
       break;
       
-      /** check */
-    case '/chk':
-      check(ctx);
-      break;
-
     default:
       notfound(ctx);
     }    
@@ -238,6 +249,69 @@ var pipes = function(spec, my) {
 	  ctx.error(new Error('No msg specified'));
       });    
   };  
+
+  pubsubhub = function(ctx, path, query) {
+    var data = '';
+    var type = '1w';
+    var subj = 'none';
+
+    if(path.split('/')[2] === '2w')
+      type = '2w';
+    if(path.split('/')[3] && 
+       path.split('/')[3].length > 0) {
+      subj = path.split('/')[3];
+    }
+
+    ctx.request().on("data", function(chunk) { data += chunk; });
+    ctx.request().on("end", function() {
+		       try {			 						 
+			 var m = fwk.message({});
+			 m.setTint(ctx.tint());
+			 m.setType(type);
+			 m.setSubject('SUB:' + subj);
+			 m.addTarget('pubsubhub');
+			 m.setBody({ query: query,
+				     data: data });
+
+			 //util.debug('QUERY: ' + util.inspect(query));
+			 //util.debug('DATA: ' + data);
+
+			 ctx.log.out('subhub: ' + m.type() + ' ' + m);
+			 my.router.route(
+			   ctx, m, 
+			   function(reply) {		       			     
+			     var data = reply.body().data;
+			     ctx.response().writeHead(200, {'Content-Type': 'text/plain; charset=utf8',
+							    'Content-Lenght': (data ? data.length : 0) });
+			     if(data) {
+			       ctx.response().write(data);
+			     }
+			     ctx.response().end();
+			     ctx.finalize();
+			   });
+
+			 /** timeout 2w*/
+			 if(m.type() === '2w') {
+			   setTimeout(function() {
+					if(!ctx.finalized())
+					  ctx.error(new Error('message timeout'));
+				      }, my.cfg['PIPES_TIMEOUT']);		
+			 }			 
+		       } catch (err) { ctx.error(err, true); }
+		       });
+  };
+
+  check = function(ctx) {
+    ctx.log.out('chk');
+    if(ctx.response()) {
+      ctx.response().writeHead(200, {'Content-Type': 'text/plain; charset=utf8'});
+      ctx.multi().on('chunk', function(chunk) { ctx.response().write(chunk); });
+      ctx.multi().send('ok');
+      ctx.response().end();
+      ctx.finalize();
+    }
+  };  
+
 
   subscribe = function(ctx, query) {
     try {
@@ -468,17 +542,6 @@ var pipes = function(spec, my) {
     }
   };  
   
-  check = function(ctx) {
-    ctx.log.out('chk');
-    if(ctx.response()) {
-      ctx.response().writeHead(200, {'Content-Type': 'text/plain; charset=utf8'});
-      ctx.multi().on('chunk', function(chunk) { ctx.response().write(chunk); });
-      ctx.multi().send('ok');
-      ctx.response().end();
-      ctx.finalize();
-    }
-  };  
-
   process.on('SIGINT', function () {
 	       shutdown(fwk.context({ logger: my.logger,
 				      config: my.cfg }));
