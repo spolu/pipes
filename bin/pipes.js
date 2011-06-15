@@ -83,8 +83,7 @@ var pipes = function(spec, my) {
 	   });
     
     var cmd = '/' + urlreq.pathname.split('/')[1];
-
-    util.debug('CMD: ' + cmd);
+    //util.debug('CMD: ' + cmd);
 
     switch(cmd) {
       
