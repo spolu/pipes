@@ -275,7 +275,7 @@ var pipes = function(spec, my) {
 			 //util.debug('QUERY: ' + util.inspect(query));
 			 //util.debug('DATA: ' + data);
 			 
-			 if(my.access.isgranted(ctx, msg)) {
+			 if(my.access.isgranted(ctx, m)) {
 			   			   
 			   ctx.log.out('subhub: ' + m.type() + ' ' + m);
 			   my.router.route(
