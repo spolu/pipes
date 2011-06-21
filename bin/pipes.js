@@ -281,7 +281,10 @@ var pipes = function(spec, my) {
 			   my.router.route(
 			     ctx, m, 
 			     function(reply) {		       			     
-			       var data = reply.body().data;
+			       var data;
+			       if(reply.body() && reply.body.data) {
+				 data = reply.body.data;
+			       }			       
 			       ctx.response().writeHead(200, {'Content-Type': 'text/plain; charset=utf8',
 							      'Content-Length': (data ? data.length : 0) });
 			       if(data) {
