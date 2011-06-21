@@ -282,8 +282,8 @@ var pipes = function(spec, my) {
 			     ctx, m, 
 			     function(reply) {		       			     
 			       var data;
-			       if(reply.body() && reply.body.data) {
-				 data = reply.body.data;
+			       if(reply.body() && reply.body().data) {
+				 data = reply.body().data;
 			       }			       
 			       ctx.response().writeHead(200, {'Content-Type': 'text/plain; charset=utf8',
 							      'Content-Length': (data ? data.length : 0) });
