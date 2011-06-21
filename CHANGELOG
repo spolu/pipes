@@ -15,6 +15,12 @@ TODO ctl:
 CHANGELOG next
 
 
+CHANGELOG v0.3.3
+
+- added meta set on message
+- added grant on SUB
+- bugfix Content-Length
+
 CHANGELOG v0.3.2
 
 - added /subhub/**** that generates SUB:**** 1w/2w msgs for PubSubHub compatibility

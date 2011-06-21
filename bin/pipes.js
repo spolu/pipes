@@ -271,33 +271,38 @@ var pipes = function(spec, my) {
 			 m.addTarget('pubsubhub');
 			 m.setBody({ query: query,
 				     data: data });
-
+			 
 			 //util.debug('QUERY: ' + util.inspect(query));
 			 //util.debug('DATA: ' + data);
-
-			 ctx.log.out('subhub: ' + m.type() + ' ' + m);
-			 my.router.route(
-			   ctx, m, 
-			   function(reply) {		       			     
-			     var data = reply.body().data;
-			     ctx.response().writeHead(200, {'Content-Type': 'text/plain; charset=utf8',
-							    'Content-Lenght': (data ? data.length : 0) });
-			     if(data) {
-			       ctx.response().write(data);
-			     }
-			     ctx.response().end();
-			     ctx.finalize();
-			   });
-
-			 /** timeout 2w*/
-			 if(m.type() === '2w') {
-			   setTimeout(function() {
-					if(!ctx.finalized())
-					  ctx.error(new Error('message timeout'));
-				      }, my.cfg['PIPES_TIMEOUT']);		
+			 
+			 if(my.access.isgranted(ctx, msg)) {
+			   			   
+			   ctx.log.out('subhub: ' + m.type() + ' ' + m);
+			   my.router.route(
+			     ctx, m, 
+			     function(reply) {		       			     
+			       var data = reply.body().data;
+			       ctx.response().writeHead(200, {'Content-Type': 'text/plain; charset=utf8',
+							      'Content-Length': (data ? data.length : 0) });
+			       if(data) {
+				 ctx.response().write(data);
+			       }
+			       ctx.response().end();
+			       ctx.finalize();
+			     });
+			   
+			   /** timeout 2w*/
+			   if(m.type() === '2w') {
+			     setTimeout(function() {
+					  if(!ctx.finalized())
+					    ctx.error(new Error('message timeout'));
+					}, my.cfg['PIPES_TIMEOUT']);		
+			   }
 			 }			 
+			 else
+			   unauthorized(ctx);			 
 		       } catch (err) { ctx.error(err, true); }
-		       });
+		     });
   };
 
   check = function(ctx) {
