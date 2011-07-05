@@ -1,8 +1,8 @@
 {
   "name": "pipes",
-  "version": "0.3.3",
-  "description": "A dead simple message queue for node.js",
-  "keywords": ["queue", "messaging", "dead", "simple"],
+  "version": "0.3.4",
+  "description": "Simple message queue for node.js",
+  "keywords": ["queue", "message", "simple"],
   "homepage": "https://github.com/spolu/pipes",
   "author": { "name": "Stanislas Polu",
               "email": "stan@bipsly.com",

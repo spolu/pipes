@@ -194,8 +194,9 @@ var pipes = function(spec, my) {
 	if(type === 'msg') {
 	  try {
 	    msg = fwk.message.deserialize(body);
-	    /** cookie forwarding */
+	    /** cookie & auth forwarding */
 	    msg.setCookies(ctx.cookies());
+	    msg.setAuth(ctx.auth());
 	    /** tint forwarding */
 	    if(msg.tint())
 	      ctx.setTint(msg.tint());
