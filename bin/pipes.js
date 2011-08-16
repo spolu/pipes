@@ -22,7 +22,7 @@
 // USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 var http = require('http');
-var url = require('url');
+var URL = require('url');
 var util = require('util');
 var fwk = require('pipes');
 
@@ -64,7 +64,7 @@ var pipes = function(spec, my) {
 			    logger: my.logger,
 			    config: my.cfg });
     ctx.request().setEncoding('utf8');
-    urlreq = url.parse(ctx.request().url, true);
+    urlreq = URL.parse(ctx.request().url, true);
     ctx.push('cmd:' + urlreq.pathname.substring(1));
 
     /** authentication */
