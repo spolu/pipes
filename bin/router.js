@@ -34,7 +34,7 @@ var subscription = function(spec, my) {
   var _super = {};
     
   my.ctx = spec.ctx;
-  if(spec.ctx && spec.ctx.responds('tint'))
+  if(spec.ctx && fwk.responds(spec.ctx, 'tint'))
     my.id = spec.ctx.tint();
   my.tag = spec.tag;
   my.cb_ = spec.cb_;  
@@ -60,12 +60,12 @@ var subscription = function(spec, my) {
 	     count: my.count };
   };
 
-  that.getter('ctx', my, 'ctx');
-  that.getter('id', my, 'id');  
-  that.getter('tag', my, 'tag');  
+  fwk.getter(that, 'ctx', my, 'ctx');
+  fwk.getter(that, 'id', my, 'id');  
+  fwk.getter(that, 'tag', my, 'tag');  
   
-  that.method('forward', forward);
-  that.method('describe', describe);
+  fwk.method(that, 'forward', forward);
+  fwk.method(that, 'describe', describe);
 
   return that;
 };
@@ -90,7 +90,7 @@ var registration = function(spec, my) {
   var _super = {};   
 
   my.ctx = spec.ctx;
-  if(my.ctx && my.ctx.responds('tint'))
+  if(my.ctx && fwk.responds(my.ctx, 'tint'))
     my.id = my.ctx.tint();
   my.queue = [];    
   my.tag = spec.tag;
@@ -188,15 +188,15 @@ var registration = function(spec, my) {
     return data;
   };
 
-  that.method('filter', filter);
-  that.method('router', router);
-  that.method('queue', queue);
-  that.method('pump', pump);
-  that.method('describe', describe);
+  fwk.method(that, 'filter', filter);
+  fwk.method(that, 'router', router);
+  fwk.method(that, 'queue', queue);
+  fwk.method(that, 'pump', pump);
+  fwk.method(that, 'describe', describe);
 
-  that.getter('id', my, 'id');
-  that.getter('tag', my, 'tag');
-  that.getter('subs', my, 'subs');  
+  fwk.getter(that, 'id', my, 'id');
+  fwk.getter(that, 'tag', my, 'tag');
+  fwk.getter(that, 'subs', my, 'subs');  
 
   return that;
 };
@@ -419,12 +419,12 @@ var router = function(spec, my) {
   };
 
   
-  that.method('route', route);
-  that.method('register', register);  
-  that.method('unregister', unregister);  
-  that.method('subscribe', subscribe);  
-  that.method('list', list);
-  that.method('shutdown', shutdown);
+  fwk.method(that, 'route', route);
+  fwk.method(that, 'register', register);  
+  fwk.method(that, 'unregister', unregister);  
+  fwk.method(that, 'subscribe', subscribe);  
+  fwk.method(that, 'list', list);
+  fwk.method(that, 'shutdown', shutdown);
   
   return that;
 };

@@ -37,7 +37,7 @@ var authorization = function(spec, my) {
   var _super = {};   
 
   my.ctx = spec.ctx;
-  if(my.ctx && my.ctx.responds('tint'))
+  if(my.ctx && fwk.responds(my.ctx, 'tint'))
     my.id = my.ctx.tint();
   my.tag = spec.tag;
   
@@ -70,11 +70,11 @@ var authorization = function(spec, my) {
 	     filter: my.filterdata };
   };
   
-  that.method('filter', filter);
-  that.method('describe', describe);
+  fwk.method(that, 'filter', filter);
+  fwk.method(that, 'describe', describe);
 
-  that.getter('id', my, 'id');
-  that.getter('tag', my, 'tag');
+  fwk.getter(that, 'id', my, 'id');
+  fwk.getter(that, 'tag', my, 'tag');
   
   return that;
 };
@@ -152,13 +152,13 @@ var access = function(spec, my) {
   };
 
 
-  that.method('grant', grant);
-  that.method('revoke', revoke);
-  that.method('list', list);
+  fwk.method(that, 'grant', grant);
+  fwk.method(that, 'revoke', revoke);
+  fwk.method(that, 'list', list);
 
-  that.method('isgranted', isgranted);
+  fwk.method(that, 'isgranted', isgranted);
 
-  that.getter('auths', my, 'auths');
+  fwk.getter(that, 'auths', my, 'auths');
   
   return that;
 };

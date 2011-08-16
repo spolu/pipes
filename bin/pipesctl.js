@@ -369,7 +369,7 @@ var pipesctl = function(spec, my) {
       });
   };
 
-  that.method('main', main);
+  fwk.method(that, 'main', main);
   
   return that;
 };

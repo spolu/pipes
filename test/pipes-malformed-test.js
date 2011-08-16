@@ -66,7 +66,7 @@ var malformed = function(spec, my) {
   };
   
   
-  that.method('go1', go1);  
+  fwk.method(that, 'go1', go1);  
 
   return that;
 };
