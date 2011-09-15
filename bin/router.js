@@ -86,119 +86,119 @@ var subscription = function(spec, my) {
  * @param spec {ctx, tag, filter, router} the context initiating that registration
  */
 var registration = function(spec, my) {
-  my = my || {};
-  var _super = {};   
+    my = my || {};
+    var _super = {};   
 
-  my.ctx = spec.ctx;
-  if(my.ctx && fwk.responds(my.ctx, 'tint'))
-    my.id = my.ctx.tint();
-  my.queue = [];    
-  my.tag = spec.tag;
-  my.subs = [];
-  my.count = 0;  
+    my.ctx = spec.ctx;
+    if(my.ctx && fwk.responds(my.ctx, 'tint'))
+	my.id = my.ctx.tint();
+    my.queue = [];    
+    my.tag = spec.tag;
+    my.subs = [];
+    my.count = 0;  
 
-  if(spec.filter && typeof spec.filter === 'function') {
-    my.filter = function(m) { 
-      try{
-	return spec.filter(m);
-      } catch (err) {
-	/** silently catch exceptions but log */
-	my.ctx.log.error(err, true);
-	return false;
-      }
-    };    
-    my.filterdata = spec.filter.toString();
-  }
-  else    
-    my.filter = function() { return false; };
-  
-  /**
-   * Router should not take the msg so that go or no go
-   * decision is independent of the msg. This forces
-   * the user to create cleanly separated registration
-   * 
-   * As an undocumented interface we passe the msg anyway
-   * to support config message routing according to
-   * the subscription tag. router function is called multiple
-   * time per message!
-   */
-  if(spec.router && typeof spec.router === 'function') {
-    my.router = function(s, m) { 
-      try{
-	return spec.router(s, m);
-      } catch (err) {
-	/** silently catch exceptions but log */
-	my.ctx.log.error(err, true);
-	return [];
-      }
-    };    
-    my.routerdata = spec.router.toString();
-  }
-  else    
-    my.router = function() { return []; };
+    if(spec.filter && typeof spec.filter === 'function') {
+	my.filter = function(m) { 
+	    try{
+		return spec.filter(m);
+	    } catch (err) {
+		/** silently catch exceptions but log */
+		my.ctx.log.error(err, true);
+		return false;
+	    }
+	};    
+	my.filterdata = spec.filter.toString();
+    }
+    else    
+	my.filter = function() { return false; };
     
-  var that = {};
-  
-  var filter, router, queue, pump, tag, describe;  
-
-  filter = function(msg) {
-    return my.filter(msg);
-  };
-
-  router = function(msg) {
-    return my.router(my.subs, msg);
-  };
-  
-  queue = function(ctx, msg) {    
-    my.count++;
-    my.queue.push(msg);
-    if(msg.type() === '2w' || msg.type() === 'c') {
-      ctx.on('finalize', function(ctx) {
-	       my.queue.remove(msg);
-	     });     
+    /**
+     * Router should not take the msg so that go or no go
+     * decision is independent of the msg. This forces
+     * the user to create cleanly separated registration
+     * 
+     * As an undocumented interface we passe the msg anyway
+     * to support config message routing according to
+     * the subscription tag. router function is called multiple
+     * time per message!
+     */
+    if(spec.router && typeof spec.router === 'function') {
+	my.router = function(s, m) { 
+	    try{
+		return spec.router(s, m);
+	    } catch (err) {
+		/** silently catch exceptions but log */
+		my.ctx.log.error(err, true);
+		return [];
+	    }
+	};    
+	my.routerdata = spec.router.toString();
     }
-  };
-  
-  pump = function() {
-    var q = [];
-    while(my.queue.length > 0) {
-      msg = my.queue.shift();
-      var r = router(msg);
-      if(r.ok) {
-	for(var i = 0; i < r.subs.length; i ++)
-	  r.subs[i].forward(msg);	  
-      }
-      else
-	q.push(msg);	
-    }
-    my.queue = q;
-  };
-  
-  describe = function() {
-    var data = { id: my.id,
-		 tag: my.tag,
-		 filter: my.filterdata,
-		 router: my.routerdata,
-		 size: my.queue.length,
-		 count: my.count };
-    data.subs = [];
-    my.subs.forEach(function(sub) {
-		      data.subs.push(sub.describe());
-		    });	     
-    return data;
-  };
-
-  fwk.method(that, 'filter', filter);
-  fwk.method(that, 'router', router);
-  fwk.method(that, 'queue', queue);
-  fwk.method(that, 'pump', pump);
-  fwk.method(that, 'describe', describe);
-
-  fwk.getter(that, 'id', my, 'id');
-  fwk.getter(that, 'tag', my, 'tag');
-  fwk.getter(that, 'subs', my, 'subs');  
-
-  return that;
+    else    
+	my.router = function() { return []; };
+    
+    var that = {};
+    
+    var filter, router, queue, pump, tag, describe;  
+    
+    filter = function(msg) {
+	return my.filter(msg);
+    };
+    
+    router = function(msg) {
+	return my.router(my.subs, msg);
+    };
+    
+    queue = function(ctx, msg) {    
+	my.count++;
+	my.queue.push(msg);
+	if(msg.type() === '2w' || msg.type() === 'c') {
+	    ctx.on('finalize', function(ctx) {
+		       my.queue.remove(msg);
+		   });     
+	}
+    };
+    
+    pump = function() {
+	var q = [];
+	while(my.queue.length > 0) {
+	    msg = my.queue.shift();
+	    var r = router(msg);
+	    if(r.ok) {
+		for(var i = 0; i < r.subs.length; i ++)
+		    r.subs[i].forward(msg);	  
+	    }
+	    else
+		q.push(msg);	
+	}
+	my.queue = q;
+    };
+    
+    describe = function() {
+	var data = { id: my.id,
+		     tag: my.tag,
+		     filter: my.filterdata,
+		     router: my.routerdata,
+		     size: my.queue.length,
+		     count: my.count };
+	data.subs = [];
+	my.subs.forEach(function(sub) {
+			    data.subs.push(sub.describe());
+			});	     
+	return data;
+    };
+    
+    fwk.method(that, 'filter', filter);
+    fwk.method(that, 'router', router);
+    fwk.method(that, 'queue', queue);
+    fwk.method(that, 'pump', pump);
+    fwk.method(that, 'describe', describe);
+    
+    fwk.getter(that, 'id', my, 'id');
+    fwk.getter(that, 'tag', my, 'tag');
+    fwk.getter(that, 'subs', my, 'subs');  
+    
+    return that;
 };
 
 
