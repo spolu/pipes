@@ -394,7 +394,7 @@ var router = function(spec, my) {
 	      }
 	  }
       }
-      if(reg) {
+      if(!reg) {
 	  ctx.error(new Error('subscribe: ' + id + ' unknown'));
 	  return;
       }
