@@ -1,6 +1,6 @@
 {
   "name": "pipes",
-  "version": "0.3.7",
+  "version": "0.3.8",
   "description": "Simple message queue for node.js",
   "keywords": ["queue", "message", "simple"],
   "homepage": "https://github.com/spolu/pipes",

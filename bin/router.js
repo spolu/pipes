@@ -380,20 +380,33 @@ var router = function(spec, my) {
 
   /** Subscribe a context for a given subscription id */
   subscribe = function(ctx, id, tag, cb_) {    
-    if(!my.regs[id]) {
-      ctx.error(new Error('subscribe: ' + id + ' unknown'));
-      return;
-    }
-    var s = subscription({ctx: ctx, tag: tag, cb_: cb_});
-    ctx.log.out('added: ' + tag + ' ' + id);
-    my.regs[id].subs().push(s);
-    
-    ctx.on('finalize', function(ctx) {
-	     ctx.log.out('removed: ' + tag + ' ' + id);
-	     my.regs[id].subs().remove(s);
-	   });  
-
-    my.regs[id].pump();
+      var reg = null;
+      if(my.regs[id]) {
+	  reg = my.regs[id];
+      }
+      else {
+	  for(var i in my.regs) {      
+	      if(my.regs.hasOwnProperty(i)) {
+		  if(my.regs[i].tag() === id) {
+		      reg = my.regs[i];
+		      break;		      
+		  }
+	      }
+	  }
+      }
+      if(reg) {
+	  ctx.error(new Error('subscribe: ' + id + ' unknown'));
+	  return;
+      }
+      var s = subscription({ctx: ctx, tag: tag, cb_: cb_});
+      ctx.log.out('added: ' + tag + ' ' + id);
+      reg.subs().push(s);
+      
+      ctx.on('finalize', function(ctx) {
+		 ctx.log.out('removed: ' + tag + ' ' + id);
+		 reg.subs().remove(s);
+	     });        
+      reg.pump();
   };
 
   list = function(id) {

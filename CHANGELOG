@@ -4,7 +4,6 @@ TODO lib:
 
 TODO bin:
 
-- Refer registration by name (in case of a restart id will change but subscription should be resilient)
 - add possibility of error message as reply for full stack error reporting
 - add index.html serving with basic information
 - add monitoring registration (non queuing): error / status [especially error]
@@ -13,6 +12,11 @@ TODO ctl:
 
 
 CHANGELOG next
+
+CHANGELOG v0.3.8
+
+- Refer registration by name (in case of a restart id will change but subscription should be resilient)
+ > tag used at registration can be used to retrieve a registration at subscription time
 
 CHANGELOG v0.3.6
 

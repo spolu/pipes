@@ -26,7 +26,7 @@ var config = fwk.baseConfig();
 config['PIPES_PORT'] = 22222;
 config['PIPES_HMAC_KEY'] = 'INSECURE';
 config['PIPES_ADMIN_USER'] = 'admin';
-config['PIPES_TIMEOUT'] = 10000;
+config['PIPES_TIMEOUT'] = 30000;
 
 /** export merged configuration */
 exports.config = config;
