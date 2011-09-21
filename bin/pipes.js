@@ -211,7 +211,8 @@ var pipes = function(spec, my) {
       function() {
 	if(msg) {
 	  try {
-	    ctx.log.out('msg: ' + msg.type() + ' ' + msg);
+	    if(ctx.auth().user !== 'admin')
+	      ctx.log.out('msg: ' + msg.type() + ' ' + msg);
 	    if(my.access.isgranted(ctx, msg)) {
 	      /** route 1w, 2w, c, r */
 	      if (msg.type() === '1w' || msg.type() === '2w' ||

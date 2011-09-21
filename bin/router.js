@@ -117,7 +117,7 @@ var registration = function(spec, my) {
      * decision is independent of the msg. This forces
      * the user to create cleanly separated registration
      * 
-     * As an undocumented interface we passe the msg anyway
+     * As an undocumented interface we pass the msg anyway
      * to support config message routing according to
      * the subscription tag. router function is called multiple
      * time per message!
