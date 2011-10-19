@@ -64,7 +64,7 @@ var pipes = function(spec, my) {
 			    logger: my.logger,
 			    config: my.cfg });
     ctx.request().setEncoding('utf8');
-    urlreq = URL.parse(ctx.request().url, true);
+    var urlreq = URL.parse(ctx.request().url, true);
     ctx.push('cmd:' + urlreq.pathname.substring(1));
 
     /** authentication */
