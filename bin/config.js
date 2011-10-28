@@ -20,7 +20,6 @@
 // USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 var fwk = require('pipes');
-
 var config = fwk.baseConfig();
 
 config['PIPES_PORT'] = 22222;
