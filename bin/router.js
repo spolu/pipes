@@ -32,7 +32,7 @@ var cfg = require("./config.js");
 var subscription = function(spec, my) {
   my = my || {};
   var _super = {};
-    
+  
   my.ctx = spec.ctx;
   if(spec.ctx && fwk.responds(spec.ctx, 'tint'))
     my.id = spec.ctx.tint();
@@ -83,122 +83,129 @@ var subscription = function(spec, my) {
  * A Registration is given a unique id (based on the ctx tint) to 
  * return to the consummer for later association to a 'sub' request.
  * 
- * @param spec {ctx, tag, filter, router} the context initiating that registration
+ * @param spec {ctx, tag, filter, router, maxqueue} the context initiating that registration
  */
 var registration = function(spec, my) {
-    my = my || {};
-    var _super = {};   
+  my = my || {};
+  var _super = {};   
 
-    my.ctx = spec.ctx;
-    if(my.ctx && fwk.responds(my.ctx, 'tint'))
-	my.id = my.ctx.tint();
-    my.queue = [];    
-    my.tag = spec.tag;
-    my.subs = [];
-    my.count = 0;  
+  my.maxqueue = spec.maxqueue | 1000;
+  my.ctx = spec.ctx;
+  if(my.ctx && fwk.responds(my.ctx, 'tint'))
+    my.id = my.ctx.tint();
+  my.queue = [];    
+  my.tag = spec.tag;
+  my.subs = [];
+  my.count = 0;  
+  my.drop = 0;
 
-    if(spec.filter && typeof spec.filter === 'function') {
-	my.filter = function(m) { 
-	    try{
-		return spec.filter(m);
-	    } catch (err) {
-		/** silently catch exceptions but log */
-		my.ctx.log.error(err, true);
-		return false;
-	    }
-	};    
-	my.filterdata = spec.filter.toString();
+  if(spec.filter && typeof spec.filter === 'function') {
+    my.filter = function(m) { 
+      try{
+	return spec.filter(m);
+      } catch (err) {
+	/** silently catch exceptions but log */
+	my.ctx.log.error(err, true);
+	return false;
+      }
+    };    
+    my.filterdata = spec.filter.toString();
+  }
+  else    
+    my.filter = function() { return false; };
+  
+  /**
+   * Router should not take the msg so that go or no go
+   * decision is independent of the msg. This forces
+   * the user to create cleanly separated registration
+   * 
+   * As an undocumented interface we pass the msg anyway
+   * to support config message routing according to
+   * the subscription tag. router function is called multiple
+   * time per message!
+   */
+  if(spec.router && typeof spec.router === 'function') {
+    my.router = function(s, m) { 
+      try{
+	return spec.router(s, m);
+      } catch (err) {
+	/** silently catch exceptions but log */
+	my.ctx.log.error(err, true);
+	return [];
+      }
+    };    
+    my.routerdata = spec.router.toString();
+  }
+  else    
+    my.router = function() { return []; };
+  
+  var that = {};
+  
+  var filter, router, queue, pump, tag, describe;  
+  
+  filter = function(msg) {
+    return my.filter(msg);
+  };
+  
+  router = function(msg) {
+    return my.router(my.subs, msg);
+  };
+  
+  queue = function(ctx, msg) {    
+    my.count++;
+    my.queue.push(msg);
+    if(msg.type() === '2w' || msg.type() === 'c') {
+      ctx.on('finalize', function(ctx) {
+	       my.queue.remove(msg);
+	     });     
     }
-    else    
-	my.filter = function() { return false; };
-    
-    /**
-     * Router should not take the msg so that go or no go
-     * decision is independent of the msg. This forces
-     * the user to create cleanly separated registration
-     * 
-     * As an undocumented interface we pass the msg anyway
-     * to support config message routing according to
-     * the subscription tag. router function is called multiple
-     * time per message!
-     */
-    if(spec.router && typeof spec.router === 'function') {
-	my.router = function(s, m) { 
-	    try{
-		return spec.router(s, m);
-	    } catch (err) {
-		/** silently catch exceptions but log */
-		my.ctx.log.error(err, true);
-		return [];
-	    }
-	};    
-	my.routerdata = spec.router.toString();
+    if(my.queue.length > my.maxqueue) {
+      my.drop++;
+      my.queue.shift();
     }
-    else    
-	my.router = function() { return []; };
-    
-    var that = {};
-    
-    var filter, router, queue, pump, tag, describe;  
-    
-    filter = function(msg) {
-	return my.filter(msg);
-    };
-    
-    router = function(msg) {
-	return my.router(my.subs, msg);
-    };
-    
-    queue = function(ctx, msg) {    
-	my.count++;
-	my.queue.push(msg);
-	if(msg.type() === '2w' || msg.type() === 'c') {
-	    ctx.on('finalize', function(ctx) {
-		       my.queue.remove(msg);
-		   });     
-	}
-    };
-    
-    pump = function() {
-	var q = [];
-	while(my.queue.length > 0) {
-	    msg = my.queue.shift();
-	    var r = router(msg);
-	    if(r.ok) {
-		for(var i = 0; i < r.subs.length; i ++)
-		    r.subs[i].forward(msg);	  
-	    }
-	    else
-		q.push(msg);	
-	}
-	my.queue = q;
-    };
-    
-    describe = function() {
-	var data = { id: my.id,
-		     tag: my.tag,
-		     filter: my.filterdata,
-		     router: my.routerdata,
-		     size: my.queue.length,
-		     count: my.count };
-	data.subs = [];
-	my.subs.forEach(function(sub) {
-			    data.subs.push(sub.describe());
-			});	     
-	return data;
-    };
-    
-    fwk.method(that, 'filter', filter);
-    fwk.method(that, 'router', router);
-    fwk.method(that, 'queue', queue);
-    fwk.method(that, 'pump', pump);
-    fwk.method(that, 'describe', describe);
-    
-    fwk.getter(that, 'id', my, 'id');
-    fwk.getter(that, 'tag', my, 'tag');
-    fwk.getter(that, 'subs', my, 'subs');  
-    
-    return that;
+  };
+  
+  pump = function() {
+    var q = [];
+    while(my.queue.length > 0) {
+      var msg = my.queue.shift();
+      var r = router(msg);
+      if(r.ok) {
+	for(var i = 0; i < r.subs.length; i ++)
+	  r.subs[i].forward(msg);	  
+      }
+      else
+	q.push(msg);	
+    }
+    my.queue = q;
+  };
+  
+  describe = function() {
+    var data = { id: my.id,
+		 tag: my.tag,
+		 filter: my.filterdata,
+		 router: my.routerdata,
+		 size: my.queue.length,
+		 count: my.count,
+		 drop: my.drop };
+    data.subs = [];
+    my.subs.forEach(function(sub) {
+		      data.subs.push(sub.describe());
+		    });	     
+    return data;
+  };
+  
+  fwk.method(that, 'filter', filter);
+  fwk.method(that, 'router', router);
+  fwk.method(that, 'queue', queue);
+  fwk.method(that, 'pump', pump);
+  fwk.method(that, 'describe', describe);
+  
+  fwk.getter(that, 'id', my, 'id');
+  fwk.getter(that, 'tag', my, 'tag');
+  fwk.getter(that, 'subs', my, 'subs');  
+  
+  return that;
 };
 
 
@@ -216,7 +223,7 @@ var registration = function(spec, my) {
 var router = function(spec, my) {
   my = my || {};
   var _super = {};
-    
+  
   my.regs = {};
   my.twoways = {};
   
@@ -230,7 +237,8 @@ var router = function(spec, my) {
 				  router: function(subs) {
 				    /** prevents queueing */
 				    return {subs: subs, ok: true};
-				  } });
+				  },
+				  maxqueue: my.cfg['PIPES_MAX_QUEUE'] });
   
   /** config default registration */
   my.regs['config'] = registration({ ctx: fwk.context({}, {tint: 'config'}),
@@ -249,7 +257,8 @@ var router = function(spec, my) {
 				       }
 				       /** prevents queueing */
 				       return {subs: res, ok: true };
-				     } });
+				     },
+				     maxqueue: my.cfg['PIPES_MAX_QUEUE'] });
   
   var that = {};
 
@@ -366,47 +375,48 @@ var router = function(spec, my) {
     var r = registration({ ctx: ctx, 
 			   tag: tag, 
 			   filter: filter, 
-			   router: router });
+			   router: router,
+			   maxqueue: my.cfg['PIPES_MAX_QUEUE'] });
     var id = r.id();
     
     if(my.regs.hasOwnProperty(id))
       unregister(ctx, id);    
-  
+    
     ctx.log.out('register: ' + tag + ' ' + id );
     my.regs[id] = r;
-  
+    
     return id;
   };
 
   /** Subscribe a context for a given subscription id */
   subscribe = function(ctx, id, tag, cb_) {    
-      var reg = null;
-      if(my.regs[id]) {
-	  reg = my.regs[id];
-      }
-      else {
-	  for(var i in my.regs) {      
-	      if(my.regs.hasOwnProperty(i)) {
-		  if(my.regs[i].tag() === id) {
-		      reg = my.regs[i];
-		      break;		      
-		  }
-	      }
+    var reg = null;
+    if(my.regs[id]) {
+      reg = my.regs[id];
+    }
+    else {
+      for(var i in my.regs) {      
+	if(my.regs.hasOwnProperty(i)) {
+	  if(my.regs[i].tag() === id) {
+	    reg = my.regs[i];
+	    break;		      
 	  }
+	}
       }
-      if(!reg) {
-	  ctx.error(new Error('subscribe: ' + id + ' unknown'));
-	  return;
-      }
-      var s = subscription({ctx: ctx, tag: tag, cb_: cb_});
-      ctx.log.out('added: ' + tag + ' ' + id);
-      reg.subs().push(s);
-      
-      ctx.on('finalize', function(ctx) {
-		 ctx.log.out('removed: ' + tag + ' ' + id);
-		 reg.subs().remove(s);
-	     });        
-      reg.pump();
+    }
+    if(!reg) {
+      ctx.error(new Error('subscribe: ' + id + ' unknown'));
+      return;
+    }
+    var s = subscription({ctx: ctx, tag: tag, cb_: cb_});
+    ctx.log.out('added: ' + tag + ' ' + id);
+    reg.subs().push(s);
+    
+    ctx.on('finalize', function(ctx) {
+	     ctx.log.out('removed: ' + tag + ' ' + id);
+	     reg.subs().remove(s);
+	   });        
+    reg.pump();
   };
 
   list = function(id) {
@@ -445,5 +455,5 @@ var router = function(spec, my) {
 
 exports.router = router;
 
-  
+
 

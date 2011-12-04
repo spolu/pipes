@@ -22,6 +22,7 @@
 var fwk = require('pipes');
 var config = fwk.baseConfig();
 
+config['PIPES_MAX_QUEUE'] = 1000;
 config['PIPES_PORT'] = 22222;
 config['PIPES_HMAC_KEY'] = 'INSECURE';
 config['PIPES_ADMIN_USER'] = 'admin';
